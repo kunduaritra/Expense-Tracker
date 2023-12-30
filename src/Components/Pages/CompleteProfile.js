@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGlobe } from "@fortawesome/free-solid-svg-icons";
@@ -7,15 +7,18 @@ import { faGithub } from "@fortawesome/free-brands-svg-icons";
 const CompleteProfile = () => {
   const [updationComplete, setUpdationComplete] = useState(false);
   const [blankInputError, setBlankInputError] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [profilePhotoURL, setProfilePhotoURL] = useState("");
+  const [isIncompleteProfile, setIsIncompleteProfile] = useState(true);
   const inputFullNameRef = useRef();
   const inputProfilePhotoURL = useRef();
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   const formSubmitHandler = async (e) => {
     e.preventDefault();
     const enteredFullName = inputFullNameRef.current.value;
     const enteredProfilePhotoURL = inputProfilePhotoURL.current.value;
-    const token = localStorage.getItem("token");
 
     if (enteredFullName && enteredProfilePhotoURL) {
       try {
@@ -35,6 +38,7 @@ const CompleteProfile = () => {
         );
         if (res.ok) {
           setUpdationComplete(true);
+          setIsIncompleteProfile(false);
           const data = await res.json();
           console.log(data);
         } else {
@@ -60,20 +64,59 @@ const CompleteProfile = () => {
     setUpdationComplete(false);
   };
 
+  const fetchDataFromServer = async () => {
+    try {
+      const res = await fetch(
+        "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyC9al0xhrxI9sgelfOWw3Gp4ftiLh5a47I",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            idToken: token,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!res.ok) {
+        throw new Error("Something Went Wrong");
+      } else {
+        const data = await res.json();
+        console.log(data);
+        if (data && data.users && data.users[0]) {
+          setFullName(data.users[0].displayName);
+          setProfilePhotoURL(data.users[0].photoUrl);
+          if (data.users[0].displayName && data.users[0].photoUrl) {
+            setIsIncompleteProfile(false);
+          }
+        }
+      }
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchDataFromServer();
+  }, []);
+
   return (
     <>
       <div className="flex border-2 p-2">
         <div className="text-xl italic my-auto">
           Winner never quit, Quitters never win.
         </div>
-        <div className="ml-auto italic bg-pink-200 rounded-full p-2 max-w-3/4 text-sm">
-          <p className="whitespace-normal">
-            Your Profile is 64% completed. A Complete Profile has higher chances
-            <Link to="/completeprofile" className="text-blue-700 block">
-              Complete Now.
-            </Link>
-          </p>
-        </div>
+        {isIncompleteProfile && (
+          <div className="ml-auto italic bg-pink-200 rounded-full p-2 max-w-3/4 text-sm">
+            <p className="whitespace-normal">
+              Your Profile is 64% completed. A Complete Profile has higher
+              chances
+              <Link to="/completeprofile" className="text-blue-700 block">
+                Complete Now.
+              </Link>
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="pl-8 py-20">
@@ -95,6 +138,7 @@ const CompleteProfile = () => {
                 type="text"
                 ref={inputFullNameRef}
                 className="border border-black rounded-full"
+                defaultValue={fullName}
                 onChange={inputOnchangeHandler}
               />
             </div>
@@ -105,6 +149,7 @@ const CompleteProfile = () => {
                 type="text"
                 ref={inputProfilePhotoURL}
                 className="border border-black rounded-full"
+                defaultValue={profilePhotoURL}
                 onChange={inputOnchangeHandler}
               />
             </div>
