@@ -118,7 +118,7 @@ const Auth = () => {
               required
             />
             <input
-              type="text"
+              type="password"
               placeholder="Password"
               className="w-full px-4 py-2 border rounded focus:outline-none focus:border-blue-500 required:"
               ref={inputPasswordRef}
@@ -127,7 +127,7 @@ const Auth = () => {
             />
             {!isLogin && (
               <input
-                type="password"
+                type="text"
                 placeholder="Confirm Password"
                 className="w-full px-4 py-2 border rounded focus:outline-none focus:border-blue-500 required:"
                 ref={inputConfirmPasswordRef}
