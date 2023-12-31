@@ -4,12 +4,15 @@ import { Link } from "react-router-dom";
 const ForgetPassword = () => {
   const inputEmailRef = useRef();
   const [sentLinkMessage, setSentLinkMessage] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const forgetPasswordHandler = async (e) => {
     e.preventDefault();
     const enteredEmail = inputEmailRef.current.value;
     if (enteredEmail) {
       try {
+        setLoading(true);
+
         const res = await fetch(
           "https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyC9al0xhrxI9sgelfOWw3Gp4ftiLh5a47I",
           {
@@ -23,26 +26,30 @@ const ForgetPassword = () => {
             }),
           }
         );
+
         if (res.ok) {
           setSentLinkMessage(true);
         } else {
           const data = await res.json();
-          if (data && data.error & data.error.message) {
+          if (data && data.error && data.error.message) {
             throw new Error(data.error.message);
           }
         }
       } catch (err) {
         alert(err.message);
+      } finally {
+        setLoading(false);
       }
     } else {
       alert("Enter an Email.");
     }
   };
+
   return (
     <div className="flex items-center justify-center mt-20">
       <div className="border flex flex-col max-w-lg p-10 shadow-md">
         <span className="italic text-blue-950 bg-pink-200 p-2 rounded-full mb-2">
-          Enter Your Registed Email to get a Password Reset Link.
+          Enter Your Registered Email to get a Password Reset Link.
         </span>
         <form
           onSubmit={forgetPasswordHandler}
@@ -57,8 +64,9 @@ const ForgetPassword = () => {
           <button
             type="submit"
             className="bg-blue-800 text-white px-4 py-2 rounded-full hover:bg-blue-700"
+            disabled={loading}
           >
-            Send Link
+            {loading ? "Sending..." : "Send Link"}
           </button>
           <Link to="/" className="mt-2 italic">
             Login | Sign Up
