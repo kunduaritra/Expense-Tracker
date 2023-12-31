@@ -1,6 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import bg from "../assets/download-bg.png";
+import AuthContext from "../Store/AuthContext";
 
 const Auth = () => {
   let inputEmailRef = useRef();
@@ -9,6 +10,7 @@ const Auth = () => {
   const [passwordMismatch, setPasswordMismatch] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
   const navigate = useNavigate();
+  const authContext = useContext(AuthContext)
 
   const signupHandler = async (e) => {
     e.preventDefault();
@@ -75,7 +77,7 @@ const Auth = () => {
           inputEmailRef.current.value = "";
           inputPasswordRef.current.value = "";
           const data = await res.json();
-          localStorage.setItem("token", data.idToken);
+          authContext.login(data.idToken)
           navigate("/welcome");
         } else {
           const data = await res.json();
