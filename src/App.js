@@ -6,6 +6,7 @@ import CompleteProfile from "./Components/Pages/CompleteProfile";
 import { useContext } from "react";
 import AuthContext from "./Components/Store/AuthContext";
 import { Navigate } from "react-router-dom";
+import ForgetPassword from "./Components/Pages/ForgetPassword";
 
 function App() {
   const authContext = useContext(AuthContext);
@@ -34,6 +35,7 @@ function App() {
                 </>
               }
             />
+            <Route path="forgetpassword" element={<ForgetPassword />} />
           </Route>
         </Routes>
       </Router>
