@@ -9,7 +9,7 @@ const Auth = () => {
   let inputPasswordRef = useRef();
   let inputConfirmPasswordRef = useRef();
   const [passwordMismatch, setPasswordMismatch] = useState(false);
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
 

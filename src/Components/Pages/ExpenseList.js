@@ -12,11 +12,12 @@ const ExpenseList = ({ expenseData }) => {
           <table className="text-center border border-black w-full">
             <thead>
               <tr className="bg-gray-200 border border-black">
-                <th className="p-2 border border-black">Amount</th>
-                <th className="p-2 border border-black">Description</th>
-                <th className="p-2 border border-black">Category</th>
-                <th className="p-2 border border-black">Type</th>
-                <th className="p-2 border border-black">Actions</th>
+                <th className="p-4 border border-black">Date</th>
+                <th className="p-4 border border-black">Amount</th>
+                <th className="p-4 border border-black">Description</th>
+                <th className="p-4 border border-black">Category</th>
+                <th className="p-4 border border-black">Type</th>
+                <th className="p-4 border border-black">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -27,21 +28,36 @@ const ExpenseList = ({ expenseData }) => {
                     item.type === "Credit" ? "bg-green-100" : "bg-red-100"
                   }`}
                 >
-                  <td className="p-2 border border-black">₹{item.expense}</td>
-                  <td className="p-2 border border-black">
+                  <td
+                    className="p-4 border border-black text-lg"
+                    style={{ minWidth: "150px" }}
+                  >
+                    {item.date}
+                  </td>
+                  <td className="p-4 border border-black text-lg">
+                    ₹{item.expense}
+                  </td>
+                  <td
+                    className="p-4 border border-black text-lg"
+                    style={{ minWidth: "150px" }}
+                  >
                     {item.description}
                   </td>
-                  <td className="p-2 border border-black">{item.category}</td>
-                  <td className="p-2 border border-black">{item.type}</td>
-                  <td className="p-2 border border-black flex justify-center space-x-2 ">
+                  <td className="p-4 border border-black text-lg">
+                    {item.category}
+                  </td>
+                  <td className="p-4 border border-black text-lg">
+                    {item.type}
+                  </td>
+                  <td className="p-4 flex justify-center space-x-2 ">
                     <button
-                      className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
+                      className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
                       // onClick={() => handleDelete(item.id)}
                     >
                       <FontAwesomeIcon icon={faTrash} />
                     </button>
                     <button
-                      className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600"
+                      className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
                       // onClick={() => handleEdit(item.id)}
                     >
                       <FontAwesomeIcon icon={faPenToSquare} />

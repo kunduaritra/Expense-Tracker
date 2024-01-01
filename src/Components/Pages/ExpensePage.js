@@ -8,13 +8,15 @@ const ExpensePage = () => {
   const inputExCategory = useRef();
   const inputExpenseTypeCredit = useRef();
   const inputExpenseTypeDebit = useRef();
+  const inputExDate = useRef();
 
   const addExpenseHandler = async (e) => {
     e.preventDefault();
     if (
       inputExpense.current.value &&
       inputExDescription.current.value &&
-      inputExCategory.current.value
+      inputExCategory.current.value &&
+      inputExDate.current.value
     ) {
       if (
         inputExpenseTypeCredit.current.value ||
@@ -22,6 +24,7 @@ const ExpensePage = () => {
       ) {
         const newExpense = {
           id: Math.random(),
+          date: inputExDate.current.value,
           expense: inputExpense.current.value,
           description: inputExDescription.current.value,
           category: inputExCategory.current.value,
@@ -40,6 +43,7 @@ const ExpensePage = () => {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
+                date: inputExDate.current.value,
                 expense: inputExpense.current.value,
                 description: inputExDescription.current.value,
                 category: inputExCategory.current.value,
@@ -63,6 +67,7 @@ const ExpensePage = () => {
           alert(err.message);
         }
 
+        inputExDate.current.value = "";
         inputExpense.current.value = "";
         inputExDescription.current.value = "";
         inputExCategory.current.value = "";
@@ -95,8 +100,19 @@ const ExpensePage = () => {
   return (
     <>
       <div className="flex justify-center items-center p-5">
-        <div className="border border-gray-100 bg-sky-200 p-10 shadow-lg">
-          <form onSubmit={addExpenseHandler} className="flex flex-row">
+        <div className="border border-gray-100 bg-sky-200 p-10 shadow-lg  md:justify-center md:items-center">
+          <form
+            onSubmit={addExpenseHandler}
+            className="flex flex-col md:flex-row items-center justify-center"
+          >
+            <div className="flex items-center mb-5">
+              <label className="italic font-bold mr-2">Date:</label>
+              <input
+                type="date"
+                className="border border-gray-200 mr-4"
+                ref={inputExDate}
+              />
+            </div>
             <div className="flex items-center mb-5">
               <label className="italic font-bold mr-2">Expense:</label>
               <div className="relative">
@@ -129,6 +145,10 @@ const ExpensePage = () => {
                 <option>Petrol</option>
                 <option>Salary</option>
                 <option>Travel</option>
+                <option>Mobile Recharge</option>
+                <option>OTT</option>
+                <option>UPI</option>
+                <option>Others</option>
               </select>
             </div>
             <div className="flex items-center mb-5">
