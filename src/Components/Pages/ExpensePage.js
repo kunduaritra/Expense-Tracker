@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ExpenseList from "./ExpenseList";
 
 const ExpensePage = () => {
@@ -9,23 +9,88 @@ const ExpensePage = () => {
   const inputExpenseTypeCredit = useRef();
   const inputExpenseTypeDebit = useRef();
 
-  const addExpenseHandler = (e) => {
+  const addExpenseHandler = async (e) => {
     e.preventDefault();
-    const newExpense = {
-      id: Math.random(),
-      expense: inputExpense.current.value,
-      description: inputExDescription.current.value,
-      category: inputExCategory.current.value,
-      type: inputExpenseTypeCredit.current.checked ? "Credit" : "Debit",
-    };
+    if (
+      inputExpense.current.value &&
+      inputExDescription.current.value &&
+      inputExCategory.current.value
+    ) {
+      if (
+        inputExpenseTypeCredit.current.value ||
+        inputExpenseTypeDebit.current.value
+      ) {
+        const newExpense = {
+          id: Math.random(),
+          expense: inputExpense.current.value,
+          description: inputExDescription.current.value,
+          category: inputExCategory.current.value,
+          type: inputExpenseTypeCredit.current.checked ? "Credit" : "Debit",
+        };
 
-    setExpenseData((prevExpenseData) => [...prevExpenseData, newExpense]);
+        const email = localStorage.getItem("userEmail");
+        const parts = email.split("@");
+        const updatedEmail = parts[0];
+        try {
+          const res = await fetch(
+            `https://expense-tracker-16e2b-default-rtdb.firebaseio.com/expense/${updatedEmail}.json`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                expense: inputExpense.current.value,
+                description: inputExDescription.current.value,
+                category: inputExCategory.current.value,
+                type: inputExpenseTypeCredit.current.checked
+                  ? "Credit"
+                  : "Debit",
+              }),
+            }
+          );
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error.message);
+          }
+          if (res.status === 200) {
+            setExpenseData((prevExpenseData) => [
+              ...prevExpenseData,
+              newExpense,
+            ]);
+          }
+        } catch (err) {
+          alert(err.message);
+        }
 
-    inputExpense.current.value = "";
-    inputExDescription.current.value = "";
-    inputExCategory.current.value = "";
-    inputExpenseTypeCredit.current.checked = true;
+        inputExpense.current.value = "";
+        inputExDescription.current.value = "";
+        inputExCategory.current.value = "";
+        inputExpenseTypeCredit.current.checked = true;
+      }
+    }
   };
+
+  const fetchDataFromServer = async () => {
+    const email = localStorage.getItem("userEmail");
+    const parts = email.split("@");
+    const updatedEmail = parts[0];
+    const res = await fetch(
+      `https://expense-tracker-16e2b-default-rtdb.firebaseio.com/expense/${updatedEmail}.json`,
+      {
+        method: "GET",
+      }
+    );
+    const data = await res.json();
+    if (data) {
+      const expensesArray = Object.values(data);
+      setExpenseData(expensesArray);
+    }
+  };
+
+  useEffect(() => {
+    fetchDataFromServer();
+  }, [addExpenseHandler]);
 
   return (
     <>

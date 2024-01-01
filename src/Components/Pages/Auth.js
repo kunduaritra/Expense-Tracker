@@ -78,7 +78,7 @@ const Auth = () => {
           inputEmailRef.current.value = "";
           inputPasswordRef.current.value = "";
           const data = await res.json();
-          authContext.login(data.idToken);
+          authContext.login(data.idToken, data.email);
           navigate("/welcome");
         } else {
           const data = await res.json();

@@ -49,7 +49,6 @@ const WelcomePage = () => {
         throw new Error("Something Went Wrong");
       } else {
         const data = await res.json();
-        console.log(data);
         if (data && data.users && data.users[0]) {
           if (data.users[0].emailVerified === true) {
             setIsEmailVerified(true);
