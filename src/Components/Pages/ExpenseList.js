@@ -3,7 +3,33 @@ import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-const ExpenseList = ({ expenseData }) => {
+const ExpenseList = ({ expenseData, onDelete, onEdit }) => {
+  const handleDelete = async (item) => {
+    const email = localStorage.getItem("userEmail");
+    const part = email.split("@");
+    const updatedEmail = part[0];
+    console.log(updatedEmail);
+    console.log(item);
+    try {
+      const res = await fetch(
+        `https://expense-tracker-16e2b-default-rtdb.firebaseio.com/expense/${updatedEmail}/${item.id}.json`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (res.status === 200) {
+        console.log("Data Successfully Deleted!");
+        onDelete(item);
+      }
+    } catch (err) {
+      alert("something went wrong");
+    }
+  };
+
+  const handleEdit = (item) => {
+    onEdit(item);
+  };
+
   return (
     <>
       <div className="mt-5 max-w-lg mx-auto">
@@ -52,13 +78,13 @@ const ExpenseList = ({ expenseData }) => {
                   <td className="p-4 flex justify-center space-x-2 ">
                     <button
                       className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
-                      // onClick={() => handleDelete(item.id)}
+                      onClick={() => handleDelete(item)}
                     >
                       <FontAwesomeIcon icon={faTrash} />
                     </button>
                     <button
                       className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-                      // onClick={() => handleEdit(item.id)}
+                      onClick={() => handleEdit(item)}
                     >
                       <FontAwesomeIcon icon={faPenToSquare} />
                     </button>

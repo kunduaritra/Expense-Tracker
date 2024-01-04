@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import ExpenseList from "./ExpenseList";
 
 const ExpensePage = () => {
+  const [isUpdating, setIsUpdating] = useState(false);
   const [expenseData, setExpenseData] = useState([]);
+  const [itemId, setItemId] = useState(null);
   const inputExpense = useRef();
   const inputExDescription = useRef();
   const inputExCategory = useRef();
@@ -58,9 +60,11 @@ const ExpensePage = () => {
             throw new Error(data.error.message);
           }
           if (res.status === 200) {
+            const data = await res.json();
+
             setExpenseData((prevExpenseData) => [
               ...prevExpenseData,
-              newExpense,
+              { ...newExpense, id: data },
             ]);
           }
         } catch (err) {
@@ -88,21 +92,85 @@ const ExpensePage = () => {
     );
     const data = await res.json();
     if (data) {
-      const expensesArray = Object.values(data);
+      const expensesArray = Object.entries(data).map(([id, expenseData]) => ({
+        id,
+        ...expenseData,
+      }));
       setExpenseData(expensesArray);
+    }
+  };
+
+  const handleExpenseDelete = (deleteItem) => {
+    const updatedExpenseData = expenseData.filter(
+      (ele) => ele.id !== deleteItem.id
+    );
+    setExpenseData(updatedExpenseData);
+  };
+
+  const handleUpdate = async (item) => {
+    setIsUpdating(true);
+    inputExDate.current.value = item.date;
+    inputExpense.current.value = item.expense;
+    inputExDescription.current.value = item.description;
+    inputExCategory.current.value = item.category;
+    inputExpenseTypeCredit.current.checked = item.type === "credit";
+    inputExpenseTypeDebit.current.checked = item.type === "debit";
+
+    setItemId(item.id);
+  };
+
+  const updateExpenseHandler = async (e) => {
+    e.preventDefault();
+    const email = localStorage.getItem("userEmail");
+    const part = email.split("@");
+    const updatedEmail = part[0];
+    if (isUpdating) {
+      try {
+        const res = await fetch(
+          `https://expense-tracker-16e2b-default-rtdb.firebaseio.com/expense/${updatedEmail}/${itemId}.json`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              date: inputExDate.current.value,
+              expense: inputExpense.current.value,
+              description: inputExDescription.current.value,
+              category: inputExCategory.current.value,
+              type: inputExpenseTypeCredit.current.checked ? "Credit" : "Debit",
+            }),
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setExpenseData((prevExpenseData) =>
+            prevExpenseData.map((expense) =>
+              expense.id === itemId ? { ...expense, ...data } : expense
+            )
+          );
+          setIsUpdating(false);
+        } else {
+          console.error("Failed to update expense:", res.statusText);
+          setIsUpdating(false);
+        }
+      } catch (error) {
+        console.error("Error during fetch:", error.message);
+        setIsUpdating(false);
+      }
     }
   };
 
   useEffect(() => {
     fetchDataFromServer();
-  }, [addExpenseHandler]);
+  }, []);
 
   return (
     <>
       <div className="flex justify-center items-center p-5">
         <div className="border border-gray-100 bg-sky-200 p-10 shadow-lg  md:justify-center md:items-center">
           <form
-            onSubmit={addExpenseHandler}
+            onSubmit={isUpdating ? updateExpenseHandler : addExpenseHandler}
             className="flex flex-col md:flex-row items-center justify-center"
           >
             <div className="flex items-center mb-5">
@@ -177,12 +245,16 @@ const ExpensePage = () => {
               type="submit"
               className="bg-pink-600 rounded-full p-3 text-white hover:bg-pink-800"
             >
-              Add Expense
+              {!isUpdating ? "Add Expense" : "Update"}
             </button>
           </form>
         </div>
       </div>
-      <ExpenseList expenseData={expenseData} />
+      <ExpenseList
+        expenseData={expenseData}
+        onDelete={handleExpenseDelete}
+        onEdit={handleUpdate}
+      />
     </>
   );
 };
