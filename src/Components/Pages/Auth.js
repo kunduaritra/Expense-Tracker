@@ -1,8 +1,9 @@
-import React, { useState, useRef, useContext } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import bg from "../assets/download-bg.png";
-import AuthContext from "../Store/AuthContext";
 import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { authActions } from "../Store/authRedux";
 
 const Auth = () => {
   let inputEmailRef = useRef();
@@ -11,7 +12,7 @@ const Auth = () => {
   const [passwordMismatch, setPasswordMismatch] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
-  const authContext = useContext(AuthContext);
+  const dispatch = useDispatch();
 
   const signupHandler = async (e) => {
     e.preventDefault();
@@ -78,7 +79,8 @@ const Auth = () => {
           inputEmailRef.current.value = "";
           inputPasswordRef.current.value = "";
           const data = await res.json();
-          authContext.login(data.idToken, data.email);
+          localStorage.setItem("userEmail", data.email);
+          dispatch(authActions.login(data.idToken));
           navigate("/welcome");
         } else {
           const data = await res.json();

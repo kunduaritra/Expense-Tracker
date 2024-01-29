@@ -1,13 +1,15 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import AuthContext from "../Store/AuthContext";
+import { useDispatch, useSelector } from "react-redux";
+import { authActions } from "../Store/authRedux";
 
 const Nav = () => {
-  const authContext = useContext(AuthContext);
+  const dispatch = useDispatch();
+  const isAuth = useSelector((state) => state.auth.isAuthenticated);
   const navigate = useNavigate();
 
   const logoutHandler = () => {
-    authContext.logout();
+    dispatch(authActions.logout());
     navigate("/");
   };
   return (
@@ -21,7 +23,7 @@ const Nav = () => {
         </li>
         <li className="mx-4">Products</li>
         <li className="mx-4">About Us</li>
-        {authContext.isLoggedIn && (
+        {isAuth && (
           <li className="mx-4">
             <button onClick={logoutHandler}>Log Out</button>
           </li>

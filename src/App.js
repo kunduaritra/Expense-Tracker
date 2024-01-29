@@ -3,14 +3,12 @@ import RootLayout from "./Components/Pages/RootLayout";
 import Auth from "./Components/Pages/Auth";
 import WelcomePage from "./Components/Pages/WelcomePage";
 import CompleteProfile from "./Components/Pages/CompleteProfile";
-import { useContext } from "react";
-import AuthContext from "./Components/Store/AuthContext";
 import { Navigate } from "react-router-dom";
 import ForgetPassword from "./Components/Pages/ForgetPassword";
+import { useSelector } from "react-redux";
 
 function App() {
-  const authContext = useContext(AuthContext);
-  const isLoggedIn = authContext.isLoggedIn;
+  const isAuth = useSelector((state) => state.auth.isAuthenticated);
   return (
     <>
       <Router>
@@ -21,8 +19,8 @@ function App() {
               path="/welcome"
               element={
                 <>
-                  {isLoggedIn && <WelcomePage />}
-                  {!isLoggedIn && <Navigate to="/" />}
+                  {isAuth && <WelcomePage />}
+                  {!isAuth && <Navigate to="/" />}
                 </>
               }
             />
@@ -30,8 +28,8 @@ function App() {
               path="/completeprofile"
               element={
                 <>
-                  {isLoggedIn && <CompleteProfile />}
-                  {!isLoggedIn && <Navigate to="/" />}
+                  {isAuth && <CompleteProfile />}
+                  {!isAuth && <Navigate to="/" />}
                 </>
               }
             />
