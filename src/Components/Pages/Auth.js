@@ -79,8 +79,9 @@ const Auth = () => {
           inputEmailRef.current.value = "";
           inputPasswordRef.current.value = "";
           const data = await res.json();
-          localStorage.setItem("userEmail", data.email);
-          dispatch(authActions.login(data.idToken));
+          dispatch(
+            authActions.login({ idToken: data.idToken, userEmail: data.email })
+          );
           navigate("/welcome");
         } else {
           const data = await res.json();

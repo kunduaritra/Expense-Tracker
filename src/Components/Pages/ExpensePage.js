@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import ExpenseList from "./ExpenseList";
+import { useDispatch, useSelector } from "react-redux";
+import { expenseActions } from "../Store/expenseRedux";
 
 const ExpensePage = () => {
   const [isUpdating, setIsUpdating] = useState(false);
@@ -11,6 +13,8 @@ const ExpensePage = () => {
   const inputExpenseTypeCredit = useRef();
   const inputExpenseTypeDebit = useRef();
   const inputExDate = useRef();
+  const email = useSelector((state) => state.auth.userEmail);
+  const dispatch = useDispatch();
 
   const addExpenseHandler = async (e) => {
     e.preventDefault();
@@ -33,7 +37,6 @@ const ExpensePage = () => {
           type: inputExpenseTypeCredit.current.checked ? "Credit" : "Debit",
         };
 
-        const email = localStorage.getItem("userEmail");
         const parts = email.split("@");
         const updatedEmail = parts[0];
         try {
@@ -61,7 +64,7 @@ const ExpensePage = () => {
           }
           if (res.status === 200) {
             const data = await res.json();
-
+            // dispatch(expenseActions.addExpense(inputExpense.current.value));
             setExpenseData((prevExpenseData) => [
               ...prevExpenseData,
               { ...newExpense, id: data },
@@ -81,7 +84,6 @@ const ExpensePage = () => {
   };
 
   const fetchDataFromServer = async () => {
-    const email = localStorage.getItem("userEmail");
     const parts = email.split("@");
     const updatedEmail = parts[0];
     const res = await fetch(
@@ -96,6 +98,13 @@ const ExpensePage = () => {
         id,
         ...expenseData,
       }));
+      let totalExpense = 0;
+      for (let i in expensesArray) {
+        if (expensesArray[i].type === "Debit") {
+          totalExpense = totalExpense + Number(expensesArray[i].expense);
+        }
+      }
+      dispatch(expenseActions.fullExpense(totalExpense));
       setExpenseData(expensesArray);
     }
   };
@@ -121,7 +130,6 @@ const ExpensePage = () => {
 
   const updateExpenseHandler = async (e) => {
     e.preventDefault();
-    const email = localStorage.getItem("userEmail");
     const part = email.split("@");
     const updatedEmail = part[0];
     if (isUpdating) {
@@ -165,10 +173,13 @@ const ExpensePage = () => {
     fetchDataFromServer();
   }, []);
 
+  const totalExpense = useSelector((state) => state.expense.totalExpense);
+
   return (
     <>
       <div className="flex justify-center items-center p-5">
         <div className="border border-gray-100 bg-sky-200 p-10 shadow-lg  md:justify-center md:items-center">
+          <div> expense ${totalExpense}</div>
           <form
             onSubmit={isUpdating ? updateExpenseHandler : addExpenseHandler}
             className="flex flex-col md:flex-row items-center justify-center"

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ExpensePage from "./ExpensePage";
+import { useSelector } from "react-redux";
 
 const WelcomePage = () => {
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [userName, setUserName] = useState("");
-  const token = localStorage.getItem("token");
+  const token = useSelector((state) => state.auth.token);
+  const totalExpense = useSelector((state) => state.expense.totalExpense);
 
   const verifyEmailHandler = async () => {
     try {
@@ -74,6 +76,12 @@ const WelcomePage = () => {
         <div className="font-bold text-3xl mx-14 mt-10 italic">
           Welcome to Expense Tracker! {userName}
         </div>
+        {totalExpense < 10000 && (
+          <span className="ml-auto mt-10 italic bg-yellow-400 text-blue-950 rounded-full p-2 hover:bg-blue-800 hover:text-yellow-200 transition duration-300 ease-in-out">
+            <button className="font-bold">Activate Premium</button>
+          </span>
+        )}
+
         <span className="ml-auto mt-10 italic bg-pink-200 rounded-full p-2">
           {!isProfileComplete ? "Your profile is incomplete." : ""}
           <Link to="/completeprofile" className="text-blue-700">
