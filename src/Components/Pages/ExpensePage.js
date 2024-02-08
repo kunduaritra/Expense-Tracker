@@ -13,7 +13,9 @@ const ExpensePage = () => {
   const inputExpenseTypeCredit = useRef();
   const inputExpenseTypeDebit = useRef();
   const inputExDate = useRef();
+
   const email = useSelector((state) => state.auth.userEmail);
+  const theme = useSelector((state) => state.theme);
   const dispatch = useDispatch();
 
   const addExpenseHandler = async (e) => {
@@ -177,95 +179,99 @@ const ExpensePage = () => {
 
   return (
     <>
-      <div className="flex justify-center items-center p-5">
-        <div className="border border-gray-100 bg-sky-200 p-10 shadow-lg  md:justify-center md:items-center">
-          <div> expense ${totalExpense}</div>
-          <form
-            onSubmit={isUpdating ? updateExpenseHandler : addExpenseHandler}
-            className="flex flex-col md:flex-row items-center justify-center"
-          >
-            <div className="flex items-center mb-5">
-              <label className="italic font-bold mr-2">Date:</label>
-              <input
-                type="date"
-                className="border border-gray-200 mr-4"
-                ref={inputExDate}
-              />
-            </div>
-            <div className="flex items-center mb-5">
-              <label className="italic font-bold mr-2">Expense:</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500">
-                  ₹
-                </span>
+      <div
+        className={`${theme.isDarkTheme ? "dark-theme-table" : "light-theme"}`}
+      >
+        <div className="flex justify-center items-center p-5">
+          <div className="border border-gray-100 bg-sky-200 p-10 shadow-lg  md:justify-center md:items-center">
+            <div> expense ${totalExpense}</div>
+            <form
+              onSubmit={isUpdating ? updateExpenseHandler : addExpenseHandler}
+              className="flex flex-col md:flex-row items-center justify-center"
+            >
+              <div className="flex items-center mb-5">
+                <label className="italic font-bold mr-2">Date:</label>
                 <input
-                  type="number"
-                  className="pl-8 border border-gray-200 mr-4"
-                  ref={inputExpense}
+                  type="date"
+                  className="border border-gray-200 mr-4"
+                  ref={inputExDate}
                 />
               </div>
-            </div>
-            <div className="flex items-center mb-5">
-              <label className="italic font-bold mr-2">Description:</label>
-              <input
-                type="text"
-                className="border border-gray-200 mr-4"
-                ref={inputExDescription}
-              />
-            </div>
+              <div className="flex items-center mb-5">
+                <label className="italic font-bold mr-2">Expense:</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    className="pl-8 border border-gray-200 mr-4"
+                    ref={inputExpense}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center mb-5">
+                <label className="italic font-bold mr-2">Description:</label>
+                <input
+                  type="text"
+                  className="border border-gray-200 mr-4"
+                  ref={inputExDescription}
+                />
+              </div>
 
-            <div className="flex items-center mb-5">
-              <label className="italic font-bold mr-2">Category:</label>
-              <select
-                className="border border-gray-200 italic rounded-full mr-4"
-                ref={inputExCategory}
+              <div className="flex items-center mb-5">
+                <label className="italic font-bold mr-2">Category:</label>
+                <select
+                  className="border border-gray-200 italic rounded-full mr-4"
+                  ref={inputExCategory}
+                >
+                  <option>Food</option>
+                  <option>Petrol</option>
+                  <option>Salary</option>
+                  <option>Travel</option>
+                  <option>Mobile Recharge</option>
+                  <option>OTT</option>
+                  <option>UPI</option>
+                  <option>Others</option>
+                </select>
+              </div>
+              <div className="flex items-center mb-5">
+                <label className="italic font-bold mr-2">Expense Type:</label>
+                <input
+                  type="radio"
+                  name="ExpenseType"
+                  value="Credit"
+                  ref={inputExpenseTypeCredit}
+                  defaultChecked
+                />
+                <label htmlFor="Credit" className="mr-4 ml-2">
+                  Credit
+                </label>
+                <input
+                  type="radio"
+                  name="ExpenseType"
+                  value="Debit"
+                  ref={inputExpenseTypeDebit}
+                />
+                <label htmlFor="Debit" className="ml-2 mr-4">
+                  Debit
+                </label>
+              </div>
+              <button
+                type="submit"
+                className="bg-pink-600 rounded-full p-3 text-white hover:bg-pink-800"
               >
-                <option>Food</option>
-                <option>Petrol</option>
-                <option>Salary</option>
-                <option>Travel</option>
-                <option>Mobile Recharge</option>
-                <option>OTT</option>
-                <option>UPI</option>
-                <option>Others</option>
-              </select>
-            </div>
-            <div className="flex items-center mb-5">
-              <label className="italic font-bold mr-2">Expense Type:</label>
-              <input
-                type="radio"
-                name="ExpenseType"
-                value="Credit"
-                ref={inputExpenseTypeCredit}
-                defaultChecked
-              />
-              <label htmlFor="Credit" className="mr-4 ml-2">
-                Credit
-              </label>
-              <input
-                type="radio"
-                name="ExpenseType"
-                value="Debit"
-                ref={inputExpenseTypeDebit}
-              />
-              <label htmlFor="Debit" className="ml-2 mr-4">
-                Debit
-              </label>
-            </div>
-            <button
-              type="submit"
-              className="bg-pink-600 rounded-full p-3 text-white hover:bg-pink-800"
-            >
-              {!isUpdating ? "Add Expense" : "Update"}
-            </button>
-          </form>
+                {!isUpdating ? "Add Expense" : "Update"}
+              </button>
+            </form>
+          </div>
         </div>
+        <ExpenseList
+          expenseData={expenseData}
+          onDelete={handleExpenseDelete}
+          onEdit={handleUpdate}
+        />
       </div>
-      <ExpenseList
-        expenseData={expenseData}
-        onDelete={handleExpenseDelete}
-        onEdit={handleUpdate}
-      />
     </>
   );
 };

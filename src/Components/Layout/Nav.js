@@ -6,6 +6,7 @@ import { authActions } from "../Store/authRedux";
 const Nav = () => {
   const dispatch = useDispatch();
   const isAuth = useSelector((state) => state.auth.isAuthenticated);
+  const theme = useSelector((state) => state.theme);
   const navigate = useNavigate();
 
   const logoutHandler = () => {
@@ -13,7 +14,11 @@ const Nav = () => {
     navigate("/");
   };
   return (
-    <div className="container flex items-center p-4">
+    <div
+      className={`container flex items-center p-4 ${
+        theme.isDarkTheme ? "dark-theme" : "light-theme"
+      }`}
+    >
       <div className="mx-4 font-bold text-2xl">
         <Link to="/welcome">MyWebLink</Link>
       </div>

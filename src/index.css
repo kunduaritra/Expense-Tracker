@@ -11,6 +11,22 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.light-theme {
+  background-color: #ffffff;
+  color: #333333;
+}
+
+.dark-theme {
+  background-color: #333333;
+  color: #ffffff;
+}
+
+.dark-theme-table {
+  background-color: #333333;
+  color: #000000;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
