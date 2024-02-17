@@ -82,50 +82,51 @@ const ExpenseList = ({ expenseData, onDelete, onEdit }) => {
                 </tr>
               </thead>
               <tbody>
-                {expenseData.map((item) => (
-                  <tr
-                    key={item.id}
-                    className={`border border-black ${
-                      item.type === "Credit" ? "bg-green-100" : "bg-red-100"
-                    }`}
-                  >
-                    <td
-                      className="p-4 border border-black text-lg"
-                      style={{ minWidth: "150px" }}
+                {expenseData &&
+                  expenseData.map((item) => (
+                    <tr
+                      key={item.id}
+                      className={`border border-black ${
+                        item.type === "Credit" ? "bg-green-100" : "bg-red-100"
+                      }`}
                     >
-                      {item.date}
-                    </td>
-                    <td className="p-4 border border-black text-lg">
-                      ₹{item.expense}
-                    </td>
-                    <td
-                      className="p-4 border border-black text-lg"
-                      style={{ minWidth: "150px" }}
-                    >
-                      {item.description}
-                    </td>
-                    <td className="p-4 border border-black text-lg">
-                      {item.category}
-                    </td>
-                    <td className="p-4 border border-black text-lg">
-                      {item.type}
-                    </td>
-                    <td className="p-4 flex justify-center space-x-2 ">
-                      <button
-                        className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
-                        onClick={() => handleDelete(item)}
+                      <td
+                        className="p-4 border border-black text-lg"
+                        style={{ minWidth: "150px" }}
                       >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                      <button
-                        className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-                        onClick={() => handleEdit(item)}
+                        {item.date}
+                      </td>
+                      <td className="p-4 border border-black text-lg">
+                        ₹{item.expense}
+                      </td>
+                      <td
+                        className="p-4 border border-black text-lg"
+                        style={{ minWidth: "150px" }}
                       >
-                        <FontAwesomeIcon icon={faPenToSquare} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                        {item.description}
+                      </td>
+                      <td className="p-4 border border-black text-lg">
+                        {item.category}
+                      </td>
+                      <td className="p-4 border border-black text-lg">
+                        {item.type}
+                      </td>
+                      <td className="p-4 flex justify-center space-x-2 ">
+                        <button
+                          className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
+                          onClick={() => handleDelete(item)}
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                        <button
+                          className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <FontAwesomeIcon icon={faPenToSquare} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>

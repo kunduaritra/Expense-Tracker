@@ -39,8 +39,8 @@ const ExpensePage = () => {
           type: inputExpenseTypeCredit.current.checked ? "Credit" : "Debit",
         };
 
-        const parts = email.split("@");
-        const updatedEmail = parts[0];
+        const part = email && email.split("@");
+        const updatedEmail = part[0];
         try {
           const res = await fetch(
             `https://expense-tracker-16e2b-default-rtdb.firebaseio.com/expense/${updatedEmail}.json`,
@@ -86,7 +86,7 @@ const ExpensePage = () => {
   };
 
   const fetchDataFromServer = async () => {
-    const parts = email.split("@");
+    const parts = email ? email.split("@") : [];
     const updatedEmail = parts[0];
     const res = await fetch(
       `https://expense-tracker-16e2b-default-rtdb.firebaseio.com/expense/${updatedEmail}.json`,
@@ -132,7 +132,7 @@ const ExpensePage = () => {
 
   const updateExpenseHandler = async (e) => {
     e.preventDefault();
-    const part = email.split("@");
+    const part = email ? email.split("@") : [];
     const updatedEmail = part[0];
     if (isUpdating) {
       try {
