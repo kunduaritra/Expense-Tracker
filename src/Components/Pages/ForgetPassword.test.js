@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import ForgetPassword from "./ForgetPassword";
+import userEvent from "@testing-library/user-event";
 
 describe("Forget Password component", () => {
   test("Password Reset", () => {
@@ -26,5 +27,19 @@ describe("Forget Password component", () => {
       "href",
       "/"
     );
+  });
+
+  test("render 'send link' text", () => {
+    render(
+      <MemoryRouter>
+        <ForgetPassword />
+      </MemoryRouter>
+    );
+
+    const buttonElement = screen.getByRole("button");
+    userEvent.click(buttonElement);
+
+    const outputText = screen.getByText("Send Link");
+    expect(outputText).toBeInTheDocument();
   });
 });
