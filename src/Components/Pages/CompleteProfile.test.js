@@ -3,6 +3,8 @@ import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
 import store from "./../Store/index";
 import CompleteProfile from "./CompleteProfile";
+import userEvent from "@testing-library/user-event";
+import { act } from "react-dom/test-utils";
 
 describe("Complete Profile Page", () => {
   test("renders 'Complete Now.' text", () => {
@@ -30,5 +32,29 @@ describe("Complete Profile Page", () => {
         "Your Profile is 64% completed. A Complete Profile has higher chances"
       )
     ).toBeInTheDocument();
+  });
+
+  test("Tesing complete now button after click", () => {
+    render(
+      <Provider store={store}>
+        <MemoryRouter>
+          <CompleteProfile />
+        </MemoryRouter>
+      </Provider>
+    );
+    window.fetch = jest.fn();
+    window.fetch.mockResolvedValueOnce({
+      json: async () => [
+        {
+          displayName: "Aritra",
+          profileUrl: "xyt/testing.jpg",
+        },
+      ],
+    });
+
+    const completeNowElement = screen.getByRole("link");
+    act(() => {
+      userEvent.click(completeNowElement);
+    });
   });
 });
