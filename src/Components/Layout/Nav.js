@@ -26,8 +26,6 @@ const Nav = () => {
         <li className="mx-4">
           <Link to="welcome">Home</Link>
         </li>
-        <li className="mx-4">Products</li>
-        <li className="mx-4">About Us</li>
         {isAuth && (
           <li className="mx-4">
             <button onClick={logoutHandler}>Log Out</button>

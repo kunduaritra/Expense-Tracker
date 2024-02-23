@@ -43,6 +43,7 @@ const Auth = () => {
             inputPasswordRef.current.value = "";
             inputConfirmPasswordRef.current.value = "";
             setPasswordMismatch(false);
+            navigate("/welcome");
           } else {
             const data = await res.json();
             if (data && data.error && data.error.message) {

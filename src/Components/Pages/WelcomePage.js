@@ -7,6 +7,7 @@ import { themeActions } from "../Store/themeRedux";
 
 const WelcomePage = () => {
   const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [sentVerification, setSentVerification] = useState(false);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [userName, setUserName] = useState("");
 
@@ -32,6 +33,9 @@ const WelcomePage = () => {
       );
       if (!res.ok) {
         throw new Error("Something went wrong");
+      } else {
+        console.log("Verification Sent Successfully!");
+        setSentVerification(true);
       }
     } catch (err) {
       alert(err.message);
@@ -98,7 +102,7 @@ const WelcomePage = () => {
             </button>
           </span>
         )}
-        {theme.isPremiumActivated && (
+        {theme.isPremiumActivated && totalExpense > 10000 && (
           <span>
             <button
               className={`ml-3 mt-10 p-2 rounded-full 
@@ -122,13 +126,22 @@ const WelcomePage = () => {
         </span>
       </div>
       {!isEmailVerified && (
-        <div>
+        <div
+          className={`${
+            theme.isDarkTheme ? "dark-theme-table" : "light-theme"
+          }`}
+        >
           <button
             onClick={verifyEmailHandler}
             className="ml-10 my-10 italic bg-red-600 rounded-full p-2 text-white font-bold"
           >
             Verify Your Email.
           </button>
+          {sentVerification && (
+            <span className="ml-4 text-green-800 italic">
+              Verification Email Sent! Check Your Mail.
+            </span>
+          )}
         </div>
       )}
       <div>

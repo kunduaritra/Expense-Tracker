@@ -3,30 +3,17 @@ import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload } from "@fortawesome/free-solid-svg-icons";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { deleteDataFromServer } from "../Store/cart-actions";
 
-const ExpenseList = ({ expenseData, onDelete, onEdit }) => {
-  const email = useSelector((state) => state.auth.userEmail);
+const ExpenseList = ({ onEdit }) => {
   const theme = useSelector((state) => state.theme);
   const totalExpense = useSelector((state) => state.expense.totalExpense);
+  const expenseItems = useSelector((state) => state.expense.expenseItems);
+  const dispatch = useDispatch();
 
-  const handleDelete = async (item) => {
-    const part = email.split("@");
-    const updatedEmail = part[0];
-    try {
-      const res = await fetch(
-        `https://expense-tracker-16e2b-default-rtdb.firebaseio.com/expense/${updatedEmail}/${item.id}.json`,
-        {
-          method: "DELETE",
-        }
-      );
-      if (res.status === 200) {
-        console.log("Data Successfully Deleted!");
-        onDelete(item);
-      }
-    } catch (err) {
-      alert("something went wrong");
-    }
+  const handleDelete = (item) => {
+    dispatch(deleteDataFromServer(item));
   };
 
   const handleEdit = (item) => {
@@ -35,13 +22,12 @@ const ExpenseList = ({ expenseData, onDelete, onEdit }) => {
 
   const handleDownloadCSV = () => {
     const csvData = "Date, Amount, Description, Category, Type\n";
-    const csvContent = expenseData.reduce((acc, item) => {
+    const csvContent = expenseItems.reduce((acc, item) => {
       return (
         acc +
         `${item.date},${item.expense},${item.description},${item.category},${item.type}\n`
       );
     }, csvData);
-
     const blob = new Blob([csvContent], { type: "text / csv " });
     const link = document.createElement("a");
     link.href = window.URL.createObjectURL(blob);
@@ -82,8 +68,8 @@ const ExpenseList = ({ expenseData, onDelete, onEdit }) => {
                 </tr>
               </thead>
               <tbody>
-                {expenseData &&
-                  expenseData.map((item) => (
+                {expenseItems &&
+                  expenseItems.map((item) => (
                     <tr
                       key={item.id}
                       className={`border border-black ${

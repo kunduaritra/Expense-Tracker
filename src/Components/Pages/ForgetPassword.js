@@ -1,10 +1,12 @@
 import React, { useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const ForgetPassword = () => {
   const inputEmailRef = useRef();
   const [sentLinkMessage, setSentLinkMessage] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const forgetPasswordHandler = async (e) => {
     e.preventDefault();
@@ -29,6 +31,7 @@ const ForgetPassword = () => {
 
         if (res.ok) {
           setSentLinkMessage(true);
+          navigate("/");
         } else {
           const data = await res.json();
           if (data && data.error && data.error.message) {
