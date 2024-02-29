@@ -12,8 +12,9 @@ const expenseSlice = createSlice({
     addExpense(state, action) {
       const { newExpense, data } = action.payload;
       state.expenseItems = [...state.expenseItems, { ...newExpense, id: data }];
-      state.totalExpense = Number(newExpense.expense) + state.totalExpense;
-      console.log(state.totalExpense);
+      if (newExpense.type === "Debit") {
+        state.totalExpense = Number(newExpense.expense) + state.totalExpense;
+      }
     },
 
     deleteExpense(state, action) {
@@ -21,20 +22,22 @@ const expenseSlice = createSlice({
       state.expenseItems = state.expenseItems.filter(
         (item) => item.id !== deleteItem.id
       );
-      state.totalExpense = deleteItem.expense - state.totalExpense;
+      if (deleteItem.type === "Debit") {
+        state.totalExpense = deleteItem.expense - state.totalExpense;
+      }
     },
 
     setCartData(state, action) {
       const items = action.payload;
-
+      console.log("items => ", items);
       state.expenseItems = Object.entries(items).map(([id, item]) => ({
         ...item,
         id: id,
       }));
       let total = 0;
-      Object.entries(items).forEach(([key, value]) => {
-        if (value.type === "Debit") {
-          total = Number(value.expense) + total;
+      Object.values(items).map((item) => {
+        if (item.type === "Debit") {
+          total += Number(item.expense);
         }
       });
       state.totalExpense = total;

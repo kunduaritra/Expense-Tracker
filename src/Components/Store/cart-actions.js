@@ -83,15 +83,19 @@ export const deleteDataFromServer = (item) => {
           method: "DELETE",
         }
       );
+
       if (res.status === 200) {
         console.log("Data Successfully Deleted!");
         dispatch(expenseActions.deleteExpense(item));
+      } else {
+        const data = await res.json();
+        throw new Error(data);
       }
     };
     try {
       await sendRequext();
     } catch (err) {
-      alert("something went wrong");
+      alert(err);
     }
   };
 };

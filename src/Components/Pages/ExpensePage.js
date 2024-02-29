@@ -80,6 +80,11 @@ const ExpensePage = () => {
     };
     setIsUpdating(false);
     dispatch(updateDataInServer(updateData));
+    inputExDate.current.value = "";
+    inputExpense.current.value = "";
+    inputExDescription.current.value = "";
+    inputExCategory.current.value = "";
+    inputExpenseTypeCredit.current.checked = true;
   };
 
   useEffect(() => {

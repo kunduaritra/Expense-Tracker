@@ -23,9 +23,11 @@ const Nav = () => {
         <Link to="/welcome">MyWebLink</Link>
       </div>
       <ul className="flex">
-        <li className="mx-4">
-          <Link to="welcome">Home</Link>
-        </li>
+        {isAuth && (
+          <li className="mx-4">
+            <Link to="welcome">Home</Link>
+          </li>
+        )}
         {isAuth && (
           <li className="mx-4">
             <button onClick={logoutHandler}>Log Out</button>
