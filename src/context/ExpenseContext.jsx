@@ -9,6 +9,10 @@ import {
   updateGoal,
   saveBudget,
   getBudget,
+  saveCard,
+  getCards,
+  deleteCard,
+  updateCard,
 } from "../services/expenseService";
 import { getMonthYear } from "../utils/dateUtils";
 
@@ -26,32 +30,42 @@ export const ExpenseProvider = ({ children }) => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [goals, setGoals] = useState([]);
-  const [budget, setBudget] = useState(null);
+  const [cards, setCards] = useState([]);
+  const [budget, setBudget] = useState(50000);
   const [loading, setLoading] = useState(false);
 
-  // Load data when user changes
   useEffect(() => {
     if (user) {
-      loadTransactions();
-      loadGoals();
-      loadBudget();
+      loadData();
     } else {
       setTransactions([]);
       setGoals([]);
-      setBudget(null);
+      setCards([]);
+      setBudget(50000);
     }
   }, [user]);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        loadTransactions(),
+        loadGoals(),
+        loadCards(),
+        loadBudget(),
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadTransactions = async () => {
     if (!user) return;
     try {
-      setLoading(true);
       const data = await getTransactions(user.email);
       setTransactions(data);
     } catch (error) {
       console.error("Error loading transactions:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -60,6 +74,11 @@ export const ExpenseProvider = ({ children }) => {
     try {
       await saveTransaction(user.email, transaction);
       await loadTransactions();
+
+      // If transaction is linked to a card, update card
+      if (transaction.cardId) {
+        await loadCards();
+      }
     } catch (error) {
       console.error("Error adding transaction:", error);
       throw error;
@@ -114,20 +133,65 @@ export const ExpenseProvider = ({ children }) => {
     try {
       const currentMonth = getMonthYear();
       const data = await getBudget(user.email, currentMonth);
-      setBudget(data);
+      if (data && data.amount) {
+        setBudget(data.amount);
+      }
     } catch (error) {
       console.error("Error loading budget:", error);
     }
   };
 
-  const updateBudget = async (budgetData) => {
+  const updateBudget = async (amount) => {
     if (!user) return;
     try {
       const currentMonth = getMonthYear();
-      await saveBudget(user.email, currentMonth, budgetData);
-      await loadBudget();
+      await saveBudget(user.email, currentMonth, { amount });
+      setBudget(amount);
     } catch (error) {
       console.error("Error updating budget:", error);
+      throw error;
+    }
+  };
+
+  const loadCards = async () => {
+    if (!user) return;
+    try {
+      const data = await getCards(user.email);
+      setCards(data);
+    } catch (error) {
+      console.error("Error loading cards:", error);
+    }
+  };
+
+  const addCard = async (card) => {
+    if (!user) return;
+    try {
+      await saveCard(user.email, card);
+      await loadCards();
+    } catch (error) {
+      console.error("Error adding card:", error);
+      throw error;
+    }
+  };
+
+  const removeCard = async (cardId) => {
+    if (!user) return;
+    try {
+      await deleteCard(user.email, cardId);
+      await loadCards();
+    } catch (error) {
+      console.error("Error deleting card:", error);
+      throw error;
+    }
+  };
+
+  const settleCard = async (cardId) => {
+    if (!user) return;
+    try {
+      await updateCard(user.email, cardId, { settled: true });
+      await loadCards();
+    } catch (error) {
+      console.error("Error settling card:", error);
       throw error;
     }
   };
@@ -135,6 +199,7 @@ export const ExpenseProvider = ({ children }) => {
   const value = {
     transactions,
     goals,
+    cards,
     budget,
     loading,
     addTransaction,
@@ -142,7 +207,10 @@ export const ExpenseProvider = ({ children }) => {
     addGoal,
     modifyGoal,
     updateBudget,
-    refreshData: loadTransactions,
+    addCard,
+    removeCard,
+    settleCard,
+    refreshData: loadData,
   };
 
   return (

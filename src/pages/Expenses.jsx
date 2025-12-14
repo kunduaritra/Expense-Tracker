@@ -39,11 +39,18 @@ const Expenses = () => {
     (a, b) => new Date(b.date) - new Date(a.date)
   );
 
-  // Group by date
-  const groupedByDate = sortedTransactions.reduce((groups, transaction) => {
-    const date = transaction.date;
-    if (!groups[date]) groups[date] = [];
-    groups[date].push(transaction);
+  // Group by month, then by date
+  const groupedByMonth = sortedTransactions.reduce((groups, transaction) => {
+    const date = new Date(transaction.date);
+    const monthKey = date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+    });
+    const dateKey = transaction.date;
+
+    if (!groups[monthKey]) groups[monthKey] = {};
+    if (!groups[monthKey][dateKey]) groups[monthKey][dateKey] = [];
+    groups[monthKey][dateKey].push(transaction);
     return groups;
   }, {});
 
@@ -92,8 +99,8 @@ const Expenses = () => {
         ))}
       </div>
 
-      {/* Transaction List */}
-      {Object.keys(groupedByDate).length === 0 ? (
+      {/* Transaction List - Month wise */}
+      {Object.keys(groupedByMonth).length === 0 ? (
         <Card>
           <div className="text-center py-12 text-gray-400">
             <p className="text-lg mb-1">No transactions found</p>
@@ -103,65 +110,97 @@ const Expenses = () => {
           </div>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {Object.entries(groupedByDate).map(([date, dayTransactions]) => (
-            <Card key={date}>
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold">{formatDate(date)}</h3>
-                <p className="text-sm text-gray-400">
-                  {dayTransactions.length} transaction
-                  {dayTransactions.length > 1 ? "s" : ""}
-                </p>
-              </div>
+        <div className="space-y-6">
+          {Object.entries(groupedByMonth).map(([month, dates]) => {
+            const monthTotal = Object.values(dates)
+              .flat()
+              .reduce(
+                (sum, t) => sum + (t.type === "expense" ? t.amount : 0),
+                0
+              );
 
-              <div className="space-y-2">
-                {dayTransactions.map((transaction) => {
-                  const category = getCategoryInfo(transaction.category);
-                  const isIncome = transaction.type === "income";
+            return (
+              <div key={month}>
+                {/* Month Header */}
+                <div className="mb-4">
+                  <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
+                    {month}
+                  </h2>
+                  <p className="text-sm text-gray-400">
+                    Total Expenses: {formatCurrency(monthTotal)}
+                  </p>
+                </div>
 
-                  return (
-                    <div
-                      key={transaction.id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-dark-bg hover:bg-opacity-70 transition-all group"
-                    >
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-dark-card">
-                          {category.emoji}
-                        </div>
-
-                        <div className="flex-1">
-                          <p className="font-medium">
-                            {transaction.description || category.name}
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            {transaction.paymentMethod}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <p
-                          className={`font-semibold ${
-                            isIncome ? "text-green-400" : "text-white"
-                          }`}
-                        >
-                          {isIncome ? "+" : "-"}
-                          {formatCurrency(transaction.amount)}
+                {/* Days in Month */}
+                <div className="space-y-4">
+                  {Object.entries(dates).map(([date, dayTransactions]) => (
+                    <Card key={date}>
+                      <div className="mb-4">
+                        <h3 className="text-lg font-semibold">
+                          {formatDate(date)}
+                        </h3>
+                        <p className="text-sm text-gray-400">
+                          {dayTransactions.length} transaction
+                          {dayTransactions.length > 1 ? "s" : ""}
                         </p>
-
-                        <button
-                          onClick={() => removeTransaction(transaction.id)}
-                          className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-500/20 rounded-lg transition-all"
-                        >
-                          <Trash2 size={16} className="text-red-400" />
-                        </button>
                       </div>
-                    </div>
-                  );
-                })}
+
+                      <div className="space-y-2">
+                        {dayTransactions.map((transaction) => {
+                          const category = getCategoryInfo(
+                            transaction.category
+                          );
+                          const isIncome = transaction.type === "income";
+
+                          return (
+                            <div
+                              key={transaction.id}
+                              className="flex items-center justify-between p-3 rounded-xl bg-dark-bg hover:bg-opacity-70 transition-all group"
+                            >
+                              <div className="flex items-center gap-3 flex-1">
+                                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-dark-card">
+                                  {category.emoji}
+                                </div>
+
+                                <div className="flex-1">
+                                  <p className="font-medium">
+                                    {transaction.description || category.name}
+                                  </p>
+                                  <p className="text-sm text-gray-400">
+                                    {transaction.paymentMethod}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <p
+                                  className={`font-semibold ${
+                                    isIncome ? "text-green-400" : "text-white"
+                                  }`}
+                                >
+                                  {isIncome ? "+" : "-"}
+                                  {formatCurrency(transaction.amount)}
+                                </p>
+
+                                <button
+                                  onClick={() =>
+                                    removeTransaction(transaction.id)
+                                  }
+                                  className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-500/20 rounded-lg transition-all"
+                                >
+                                  <Trash2 size={16} className="text-red-400" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

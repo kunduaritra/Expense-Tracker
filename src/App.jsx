@@ -15,7 +15,15 @@ import Expenses from "./pages/Expenses";
 import Goals from "./pages/Goals";
 import Insights from "./pages/Insights";
 import Profile from "./pages/Profile";
-import { Home, Receipt, Target, BarChart3, User } from "lucide-react";
+import CreditCards from "./pages/CreditCards";
+import {
+  Home,
+  Receipt,
+  Target,
+  BarChart3,
+  User,
+  CreditCard,
+} from "lucide-react";
 
 // Protected Route Component
 const ProtectedRoute = () => {
@@ -37,6 +45,7 @@ const Layout = () => {
   const navItems = [
     { path: "/dashboard", icon: Home, label: "Home" },
     { path: "/expenses", icon: Receipt, label: "Expenses" },
+    { path: "/cards", icon: CreditCard, label: "Cards" }, // ADD THIS LINE
     { path: "/goals", icon: Target, label: "Goals" },
     { path: "/insights", icon: BarChart3, label: "Insights" },
     { path: "/profile", icon: User, label: "Profile" },
@@ -96,6 +105,7 @@ function App() {
               <Route path="/goals" element={<Goals />} />
               <Route path="/insights" element={<Insights />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/cards" element={<CreditCards />} />
             </Route>
 
             {/* Redirect root to dashboard */}

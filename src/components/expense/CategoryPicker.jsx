@@ -1,22 +1,12 @@
 import React from "react";
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "../../utils/constants";
 
-const CATEGORIES = [
-  { id: "food", name: "Food", emoji: "🍕" },
-  { id: "transport", name: "Transport", emoji: "🚗" },
-  { id: "shopping", name: "Shopping", emoji: "🛍️" },
-  { id: "entertainment", name: "Entertainment", emoji: "🎬" },
-  { id: "bills", name: "Bills", emoji: "💡" },
-  { id: "health", name: "Health", emoji: "💊" },
-  { id: "education", name: "Education", emoji: "📚" },
-  { id: "travel", name: "Travel", emoji: "✈️" },
-  { id: "investment", name: "Investment", emoji: "📈" },
-  { id: "others", name: "Others", emoji: "📦" },
-];
+const CategoryPicker = ({ selected, onSelect, type = "expense" }) => {
+  const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
-const CategoryPicker = ({ selected, onSelect }) => {
   return (
-    <div className="grid grid-cols-5 gap-3">
-      {CATEGORIES.map((category) => (
+    <div className="grid grid-cols-3 gap-3">
+      {categories.map((category) => (
         <button
           key={category.id}
           type="button"

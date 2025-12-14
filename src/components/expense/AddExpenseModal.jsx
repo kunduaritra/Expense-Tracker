@@ -3,11 +3,11 @@ import BottomSheet from "../common/BottomSheet";
 import Button from "../common/Button";
 import Input from "../common/Input";
 import CategoryPicker from "./CategoryPicker";
-import { IndianRupee, Calendar, FileText, CreditCard } from "lucide-react";
+import { DollarSign, Calendar, FileText } from "lucide-react";
 
 const PAYMENT_METHODS = ["Cash", "Card", "UPI", "Net Banking"];
 
-const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
+const AddExpenseModal = ({ isOpen, onClose, onSubmit, savedCards = [] }) => {
   const [formData, setFormData] = useState({
     amount: "",
     category: "food",
@@ -15,6 +15,7 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
     description: "",
     paymentMethod: "UPI",
     type: "expense",
+    cardId: null,
   });
 
   const [errors, setErrors] = useState({});
@@ -22,7 +23,6 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validation
     const newErrors = {};
     if (!formData.amount || formData.amount <= 0) {
       newErrors.amount = "Please enter a valid amount";
@@ -41,7 +41,6 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
       amount: parseFloat(formData.amount),
     });
 
-    // Reset form
     setFormData({
       amount: "",
       category: "food",
@@ -49,6 +48,7 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
       description: "",
       paymentMethod: "UPI",
       type: "expense",
+      cardId: null,
     });
     setErrors({});
     onClose();
@@ -61,7 +61,9 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
         <div className="flex gap-2 p-1 bg-dark-bg rounded-xl">
           <button
             type="button"
-            onClick={() => setFormData({ ...formData, type: "expense" })}
+            onClick={() =>
+              setFormData({ ...formData, type: "expense", category: "food" })
+            }
             className={`flex-1 py-2 rounded-lg font-medium transition-all ${
               formData.type === "expense"
                 ? "bg-red-500 text-white"
@@ -72,7 +74,9 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
           </button>
           <button
             type="button"
-            onClick={() => setFormData({ ...formData, type: "income" })}
+            onClick={() =>
+              setFormData({ ...formData, type: "income", category: "salary" })
+            }
             className={`flex-1 py-2 rounded-lg font-medium transition-all ${
               formData.type === "income"
                 ? "bg-green-500 text-white"
@@ -88,7 +92,7 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
           <Input
             label="Amount"
             type="number"
-            icon={IndianRupee}
+            icon={DollarSign}
             value={formData.amount}
             onChange={(e) =>
               setFormData({ ...formData, amount: e.target.value })
@@ -107,6 +111,7 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
           <CategoryPicker
             selected={formData.category}
             onSelect={(category) => setFormData({ ...formData, category })}
+            type={formData.type}
           />
           {errors.category && (
             <p className="mt-1 text-sm text-red-400">{errors.category}</p>
@@ -146,6 +151,58 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
             ))}
           </div>
         </div>
+
+        {/* Saved Cards Selection (Only for Card payment) */}
+        {formData.paymentMethod === "Card" &&
+          savedCards.length > 0 &&
+          formData.type === "expense" && (
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-3">
+                Select Card (Optional)
+              </label>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, cardId: null })}
+                  className={`w-full p-3 rounded-xl border transition-all text-left ${
+                    !formData.cardId
+                      ? "border-purple-500 bg-purple-500/10"
+                      : "border-dark-border hover:border-gray-600"
+                  }`}
+                >
+                  <p className="font-medium">No Card (One-time payment)</p>
+                </button>
+                {savedCards.map((card) => (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() =>
+                      setFormData({ ...formData, cardId: card.id })
+                    }
+                    className={`w-full p-3 rounded-xl border transition-all text-left ${
+                      formData.cardId === card.id
+                        ? "border-purple-500 bg-purple-500/10"
+                        : "border-dark-border hover:border-gray-600"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{card.name}</p>
+                        <p className="text-sm text-gray-400">
+                          **** {card.last4}
+                        </p>
+                      </div>
+                      {!card.settled && (
+                        <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded">
+                          Pending
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
         {/* Description */}
         <Input

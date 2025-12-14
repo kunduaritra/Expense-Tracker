@@ -124,3 +124,61 @@ export const getBudget = async (email, month) => {
 
   return await response.json();
 };
+
+export const saveCard = async (email, card) => {
+  const sanitized = sanitizeEmail(email);
+  const cardId = Date.now().toString();
+
+  const response = await fetch(
+    `${DB_URL}/expense/${sanitized}/cards/${cardId}.json`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...card,
+        id: cardId,
+        createdAt: new Date().toISOString(),
+      }),
+    }
+  );
+
+  return await response.json();
+};
+
+export const getCards = async (email) => {
+  const sanitized = sanitizeEmail(email);
+
+  const response = await fetch(`${DB_URL}/expense/${sanitized}/cards.json`);
+
+  const data = await response.json();
+
+  if (!data) return [];
+
+  return Object.entries(data).map(([id, card]) => ({
+    id,
+    ...card,
+  }));
+};
+
+export const deleteCard = async (email, cardId) => {
+  const sanitized = sanitizeEmail(email);
+
+  await fetch(`${DB_URL}/expense/${sanitized}/cards/${cardId}.json`, {
+    method: "DELETE",
+  });
+};
+
+export const updateCard = async (email, cardId, updates) => {
+  const sanitized = sanitizeEmail(email);
+
+  const response = await fetch(
+    `${DB_URL}/expense/${sanitized}/cards/${cardId}.json`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    }
+  );
+
+  return await response.json();
+};

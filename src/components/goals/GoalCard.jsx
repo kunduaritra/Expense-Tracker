@@ -1,9 +1,9 @@
 import React from "react";
 import Card from "../common/Card";
 import { formatCurrency } from "../../utils/formatters";
-import { Target, TrendingUp } from "lucide-react";
+import { Target, History } from "lucide-react";
 
-const GoalCard = ({ goal, onContribute }) => {
+const GoalCard = ({ goal, onContribute, onViewHistory }) => {
   const progress =
     goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
 
@@ -11,6 +11,8 @@ const GoalCard = ({ goal, onContribute }) => {
   const daysLeft = Math.ceil(
     (new Date(goal.deadline) - new Date()) / (1000 * 60 * 60 * 24)
   );
+
+  const contributionsCount = goal.contributions?.length || 0;
 
   return (
     <Card className="relative overflow-hidden">
@@ -41,7 +43,7 @@ const GoalCard = ({ goal, onContribute }) => {
       </div>
 
       {/* Amount Info */}
-      <div className="flex justify-between items-end">
+      <div className="flex justify-between items-end mb-4">
         <div>
           <p className="text-sm text-gray-400">Saved</p>
           <p className="text-xl font-bold">
@@ -57,21 +59,34 @@ const GoalCard = ({ goal, onContribute }) => {
       </div>
 
       {remaining > 0 && (
-        <div className="mt-4 p-3 bg-purple-500/10 rounded-xl">
+        <div className="mb-4 p-3 bg-purple-500/10 rounded-xl">
           <p className="text-sm text-purple-400">
             {formatCurrency(remaining)} remaining to reach your goal
           </p>
         </div>
       )}
 
-      {onContribute && (
-        <button
-          onClick={() => onContribute(goal)}
-          className="mt-4 w-full py-2 bg-dark-bg hover:bg-opacity-70 rounded-lg text-sm font-medium transition-all"
-        >
-          Add Contribution
-        </button>
-      )}
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        {onContribute && (
+          <button
+            onClick={() => onContribute(goal)}
+            className="flex-1 py-2 bg-dark-bg hover:bg-opacity-70 rounded-lg text-sm font-medium transition-all"
+          >
+            Add Contribution
+          </button>
+        )}
+        {onViewHistory && contributionsCount > 0 && (
+          <button
+            onClick={() => onViewHistory(goal)}
+            className="py-2 px-3 bg-dark-bg hover:bg-opacity-70 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
+            title="View History"
+          >
+            <History size={16} />
+            {contributionsCount}
+          </button>
+        )}
+      </div>
     </Card>
   );
 };

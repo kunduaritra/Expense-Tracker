@@ -34,6 +34,7 @@ const AddGoalModal = ({ isOpen, onClose, onSubmit }) => {
       ...formData,
       targetAmount: parseFloat(formData.targetAmount),
       currentAmount: parseFloat(formData.currentAmount),
+      contributions: [], // Initialize empty contributions array
     });
 
     setFormData({
