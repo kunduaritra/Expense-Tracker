@@ -1,15 +1,15 @@
 import React from "react";
 import Card from "../common/Card";
 import { formatCurrency } from "../../utils/formatters";
-import { Target, History } from "lucide-react";
+import { Target, History, Settings, Trash2 } from "lucide-react";
 
-const GoalCard = ({ goal, onContribute, onViewHistory }) => {
+const GoalCard = ({ goal, onContribute, onViewHistory, onEdit, onDelete }) => {
   const progress =
     goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
 
   const remaining = goal.targetAmount - goal.currentAmount;
   const daysLeft = Math.ceil(
-    (new Date(goal.deadline) - new Date()) / (1000 * 60 * 60 * 24)
+    (new Date(goal.deadline) - new Date()) / (1000 * 60 * 60 * 24),
   );
 
   const contributionsCount = goal.contributions?.length || 0;
@@ -25,6 +25,26 @@ const GoalCard = ({ goal, onContribute, onViewHistory }) => {
             <h3 className="font-semibold">{goal.title}</h3>
             <p className="text-sm text-gray-400">{daysLeft} days left</p>
           </div>
+        </div>
+        <div className="flex gap-1">
+          {onEdit && (
+            <button
+              onClick={() => onEdit(goal)}
+              className="p-2 hover:bg-dark-bg rounded-lg transition-all"
+              title="Edit Goal"
+            >
+              <Settings size={18} className="text-gray-400 hover:text-white" />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => onDelete(goal.id)}
+              className="p-2 hover:bg-red-500/20 rounded-lg transition-all"
+              title="Delete Goal"
+            >
+              <Trash2 size={18} className="text-red-400" />
+            </button>
+          )}
         </div>
       </div>
 

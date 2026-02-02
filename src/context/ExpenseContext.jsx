@@ -7,12 +7,17 @@ import {
   saveGoal,
   getGoals,
   updateGoal,
+  deleteGoal,
   saveBudget,
   getBudget,
   saveCard,
   getCards,
   deleteCard,
   updateCard,
+  saveReminder,
+  getReminders,
+  deleteReminder,
+  updateReminder,
 } from "../services/expenseService";
 import { getMonthYear } from "../utils/dateUtils";
 
@@ -33,6 +38,7 @@ export const ExpenseProvider = ({ children }) => {
   const [cards, setCards] = useState([]);
   const [budget, setBudget] = useState(50000);
   const [loading, setLoading] = useState(false);
+  const [reminders, setReminders] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -46,7 +52,7 @@ export const ExpenseProvider = ({ children }) => {
   }, [user]);
 
   const loadData = async () => {
-    setLoading(true);
+    (loadReminders(), setLoading(true));
     try {
       await Promise.all([
         loadTransactions(),
@@ -128,6 +134,17 @@ export const ExpenseProvider = ({ children }) => {
     }
   };
 
+  const removeGoal = async (goalId) => {
+    if (!user) return;
+    try {
+      await deleteGoal(user.email, goalId);
+      await loadGoals();
+    } catch (error) {
+      console.error("Error deleting goal:", error);
+      throw error;
+    }
+  };
+
   const loadBudget = async () => {
     if (!user) return;
     try {
@@ -196,6 +213,54 @@ export const ExpenseProvider = ({ children }) => {
     }
   };
 
+  const loadReminders = async () => {
+    if (!user) return;
+    try {
+      const data = await getReminders(user.email);
+      setReminders(data);
+    } catch (error) {
+      console.error("Error loading reminders:", error);
+    }
+  };
+
+  const addReminder = async (reminder) => {
+    if (!user) return;
+    try {
+      await saveReminder(user.email, reminder);
+      await loadReminders();
+    } catch (error) {
+      console.error("Error adding reminder:", error);
+      throw error;
+    }
+  };
+
+  const removeReminder = async (reminderId) => {
+    if (!user) return;
+    try {
+      await deleteReminder(user.email, reminderId);
+      await loadReminders();
+    } catch (error) {
+      console.error("Error deleting reminder:", error);
+      throw error;
+    }
+  };
+
+  const toggleReminder = async (reminderId) => {
+    if (!user) return;
+    try {
+      const reminder = reminders.find((r) => r.id === reminderId);
+      if (reminder) {
+        await updateReminder(user.email, reminderId, {
+          isActive: !reminder.isActive,
+        });
+        await loadReminders();
+      }
+    } catch (error) {
+      console.error("Error toggling reminder:", error);
+      throw error;
+    }
+  };
+
   const value = {
     transactions,
     goals,
@@ -206,11 +271,16 @@ export const ExpenseProvider = ({ children }) => {
     removeTransaction,
     addGoal,
     modifyGoal,
+    removeGoal,
     updateBudget,
     addCard,
     removeCard,
     settleCard,
     refreshData: loadData,
+    reminders,
+    addReminder,
+    removeReminder,
+    toggleReminder,
   };
 
   return (

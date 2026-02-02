@@ -3,9 +3,9 @@ import BottomSheet from "../common/BottomSheet";
 import Button from "../common/Button";
 import Input from "../common/Input";
 import CategoryPicker from "./CategoryPicker";
-import { DollarSign, Calendar, FileText } from "lucide-react";
+import { IndianRupee, Calendar, FileText } from "lucide-react";
 
-const PAYMENT_METHODS = ["Cash", "Card", "UPI", "Net Banking"];
+const PAYMENT_METHODS = ["Cash", "UPI", "Card", "Credit Card", "Net Banking"];
 
 const AddExpenseModal = ({ isOpen, onClose, onSubmit, savedCards = [] }) => {
   const [formData, setFormData] = useState({
@@ -92,7 +92,7 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit, savedCards = [] }) => {
           <Input
             label="Amount"
             type="number"
-            icon={DollarSign}
+            icon={IndianRupee}
             value={formData.amount}
             onChange={(e) =>
               setFormData({ ...formData, amount: e.target.value })

@@ -2,9 +2,15 @@ import React, { useState } from "react";
 import BottomSheet from "../common/BottomSheet";
 import Button from "../common/Button";
 import Input from "../common/Input";
-import { Target, DollarSign, Calendar } from "lucide-react";
+import { Target, IndianRupee, Calendar } from "lucide-react";
 
-const AddGoalModal = ({ isOpen, onClose, onSubmit }) => {
+const AddGoalModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialData = null,
+  isEdit = false,
+}) => {
   const [formData, setFormData] = useState({
     title: "",
     targetAmount: "",
@@ -14,6 +20,19 @@ const AddGoalModal = ({ isOpen, onClose, onSubmit }) => {
   });
 
   const [errors, setErrors] = useState({});
+
+  // Update form when initialData changes (for edit mode)
+  React.useEffect(() => {
+    if (initialData && isEdit) {
+      setFormData({
+        title: initialData.title || "",
+        targetAmount: initialData.targetAmount?.toString() || "",
+        currentAmount: initialData.currentAmount?.toString() || "0",
+        deadline: initialData.deadline || "",
+        category: initialData.category || "Savings",
+      });
+    }
+  }, [initialData, isEdit]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -34,22 +53,28 @@ const AddGoalModal = ({ isOpen, onClose, onSubmit }) => {
       ...formData,
       targetAmount: parseFloat(formData.targetAmount),
       currentAmount: parseFloat(formData.currentAmount),
-      contributions: [], // Initialize empty contributions array
+      contributions: initialData?.contributions || [], // Preserve existing contributions
     });
 
-    setFormData({
-      title: "",
-      targetAmount: "",
-      currentAmount: "0",
-      deadline: "",
-      category: "Savings",
-    });
+    if (!isEdit) {
+      setFormData({
+        title: "",
+        targetAmount: "",
+        currentAmount: "0",
+        deadline: "",
+        category: "Savings",
+      });
+    }
     setErrors({});
     onClose();
   };
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} title="Create New Goal">
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEdit ? "Edit Goal" : "Create New Goal"}
+    >
       <form onSubmit={handleSubmit} className="space-y-6">
         <Input
           label="Goal Title"
@@ -64,7 +89,7 @@ const AddGoalModal = ({ isOpen, onClose, onSubmit }) => {
         <Input
           label="Target Amount"
           type="number"
-          icon={DollarSign}
+          icon={IndianRupee}
           value={formData.targetAmount}
           onChange={(e) =>
             setFormData({ ...formData, targetAmount: e.target.value })
@@ -77,7 +102,7 @@ const AddGoalModal = ({ isOpen, onClose, onSubmit }) => {
         <Input
           label="Current Amount (Optional)"
           type="number"
-          icon={DollarSign}
+          icon={IndianRupee}
           value={formData.currentAmount}
           onChange={(e) =>
             setFormData({ ...formData, currentAmount: e.target.value })
@@ -99,7 +124,7 @@ const AddGoalModal = ({ isOpen, onClose, onSubmit }) => {
         />
 
         <Button type="submit" fullWidth size="lg">
-          Create Goal
+          {isEdit ? "Update Goal" : "Create Goal"}
         </Button>
       </form>
     </BottomSheet>

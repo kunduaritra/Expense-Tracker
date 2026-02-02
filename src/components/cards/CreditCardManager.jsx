@@ -184,7 +184,7 @@ const CreditCardManager = ({
                       onClick={() => {
                         if (
                           confirm(
-                            "Delete this card? All transactions will remain."
+                            "Delete this card? All transactions will remain.",
                           )
                         ) {
                           onDeleteCard(card.id);

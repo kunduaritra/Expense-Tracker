@@ -19,7 +19,7 @@ export const saveTransaction = async (email, transaction) => {
         ...transaction,
         createdAt: new Date().toISOString(),
       }),
-    }
+    },
   );
 
   return await response.json();
@@ -29,7 +29,7 @@ export const getTransactions = async (email) => {
   const sanitized = sanitizeEmail(email);
 
   const response = await fetch(
-    `${DB_URL}/expense/${sanitized}/transactions.json`
+    `${DB_URL}/expense/${sanitized}/transactions.json`,
   );
 
   const data = await response.json();
@@ -47,7 +47,7 @@ export const deleteTransaction = async (email, transactionId) => {
 
   await fetch(
     `${DB_URL}/expense/${sanitized}/transactions/${transactionId}.json`,
-    { method: "DELETE" }
+    { method: "DELETE" },
   );
 };
 
@@ -64,7 +64,7 @@ export const saveGoal = async (email, goal) => {
         ...goal,
         createdAt: new Date().toISOString(),
       }),
-    }
+    },
   );
 
   return await response.json();
@@ -94,7 +94,7 @@ export const updateGoal = async (email, goalId, updates) => {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
-    }
+    },
   );
 
   return await response.json();
@@ -109,7 +109,7 @@ export const saveBudget = async (email, month, budgets) => {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(budgets),
-    }
+    },
   );
 
   return await response.json();
@@ -119,7 +119,7 @@ export const getBudget = async (email, month) => {
   const sanitized = sanitizeEmail(email);
 
   const response = await fetch(
-    `${DB_URL}/expense/${sanitized}/budgets/${month}.json`
+    `${DB_URL}/expense/${sanitized}/budgets/${month}.json`,
   );
 
   return await response.json();
@@ -139,7 +139,7 @@ export const saveCard = async (email, card) => {
         id: cardId,
         createdAt: new Date().toISOString(),
       }),
-    }
+    },
   );
 
   return await response.json();
@@ -177,8 +177,74 @@ export const updateCard = async (email, cardId, updates) => {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
-    }
+    },
   );
 
   return await response.json();
+};
+
+export const saveReminder = async (email, reminder) => {
+  const sanitized = sanitizeEmail(email);
+  const reminderId = Date.now().toString();
+
+  const response = await fetch(
+    `${DB_URL}/expense/${sanitized}/reminders/${reminderId}.json`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...reminder,
+        id: reminderId,
+        createdAt: new Date().toISOString(),
+      }),
+    },
+  );
+
+  return await response.json();
+};
+
+export const getReminders = async (email) => {
+  const sanitized = sanitizeEmail(email);
+
+  const response = await fetch(`${DB_URL}/expense/${sanitized}/reminders.json`);
+
+  const data = await response.json();
+
+  if (!data) return [];
+
+  return Object.entries(data).map(([id, reminder]) => ({
+    id,
+    ...reminder,
+  }));
+};
+
+export const deleteReminder = async (email, reminderId) => {
+  const sanitized = sanitizeEmail(email);
+
+  await fetch(`${DB_URL}/expense/${sanitized}/reminders/${reminderId}.json`, {
+    method: "DELETE",
+  });
+};
+
+export const updateReminder = async (email, reminderId, updates) => {
+  const sanitized = sanitizeEmail(email);
+
+  const response = await fetch(
+    `${DB_URL}/expense/${sanitized}/reminders/${reminderId}.json`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    },
+  );
+
+  return await response.json();
+};
+
+export const deleteGoal = async (email, goalId) => {
+  const sanitized = sanitizeEmail(email);
+
+  await fetch(`${DB_URL}/expense/${sanitized}/goals/${goalId}.json`, {
+    method: "DELETE",
+  });
 };
