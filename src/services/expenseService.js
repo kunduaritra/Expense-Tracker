@@ -248,3 +248,49 @@ export const deleteGoal = async (email, goalId) => {
     method: "DELETE",
   });
 };
+
+export const saveAccount = async (email, account) => {
+  const sanitized = sanitizeEmail(email);
+  const accountId = Date.now().toString();
+  const response = await fetch(
+    `${DB_URL}/expense/${sanitized}/accounts/${accountId}.json`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...account,
+        id: accountId,
+        createdAt: new Date().toISOString(),
+      }),
+    },
+  );
+  return await response.json();
+};
+
+export const getAccounts = async (email) => {
+  const sanitized = sanitizeEmail(email);
+  const response = await fetch(`${DB_URL}/expense/${sanitized}/accounts.json`);
+  const data = await response.json();
+  if (!data) return [];
+  return Object.entries(data).map(([id, acc]) => ({ id, ...acc }));
+};
+
+export const updateAccountData = async (email, accountId, updates) => {
+  const sanitized = sanitizeEmail(email);
+  const response = await fetch(
+    `${DB_URL}/expense/${sanitized}/accounts/${accountId}.json`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    },
+  );
+  return await response.json();
+};
+
+export const deleteAccount = async (email, accountId) => {
+  const sanitized = sanitizeEmail(email);
+  await fetch(`${DB_URL}/expense/${sanitized}/accounts/${accountId}.json`, {
+    method: "DELETE",
+  });
+};

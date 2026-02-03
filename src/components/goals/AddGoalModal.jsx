@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import BottomSheet from "../common/BottomSheet";
 import Button from "../common/Button";
 import Input from "../common/Input";
@@ -21,8 +21,7 @@ const AddGoalModal = ({
 
   const [errors, setErrors] = useState({});
 
-  // Update form when initialData changes (for edit mode)
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialData && isEdit) {
       setFormData({
         title: initialData.title || "",
@@ -53,7 +52,7 @@ const AddGoalModal = ({
       ...formData,
       targetAmount: parseFloat(formData.targetAmount),
       currentAmount: parseFloat(formData.currentAmount),
-      contributions: initialData?.contributions || [], // Preserve existing contributions
+      contributions: initialData?.contributions || [],
     });
 
     if (!isEdit) {
@@ -75,58 +74,63 @@ const AddGoalModal = ({
       onClose={onClose}
       title={isEdit ? "Edit Goal" : "Create New Goal"}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Input
-          label="Goal Title"
-          type="text"
-          icon={Target}
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          placeholder="e.g., Emergency Fund, Vacation"
-          error={errors.title}
-        />
+      {/* Scrollable container with extra bottom padding */}
+      <div className="overflow-y-auto max-h-[70vh] pb-[120px] px-1">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Input
+            label="Goal Title"
+            type="text"
+            icon={Target}
+            value={formData.title}
+            onChange={(e) =>
+              setFormData({ ...formData, title: e.target.value })
+            }
+            placeholder="e.g., Emergency Fund, Vacation"
+            error={errors.title}
+          />
 
-        <Input
-          label="Target Amount"
-          type="number"
-          icon={IndianRupee}
-          value={formData.targetAmount}
-          onChange={(e) =>
-            setFormData({ ...formData, targetAmount: e.target.value })
-          }
-          placeholder="100000"
-          error={errors.targetAmount}
-          step="100"
-        />
+          <Input
+            label="Target Amount"
+            type="number"
+            icon={IndianRupee}
+            value={formData.targetAmount}
+            onChange={(e) =>
+              setFormData({ ...formData, targetAmount: e.target.value })
+            }
+            placeholder="100000"
+            error={errors.targetAmount}
+            step="100"
+          />
 
-        <Input
-          label="Current Amount (Optional)"
-          type="number"
-          icon={IndianRupee}
-          value={formData.currentAmount}
-          onChange={(e) =>
-            setFormData({ ...formData, currentAmount: e.target.value })
-          }
-          placeholder="0"
-          step="100"
-        />
+          <Input
+            label="Current Amount (Optional)"
+            type="number"
+            icon={IndianRupee}
+            value={formData.currentAmount}
+            onChange={(e) =>
+              setFormData({ ...formData, currentAmount: e.target.value })
+            }
+            placeholder="0"
+            step="100"
+          />
 
-        <Input
-          label="Deadline"
-          type="date"
-          icon={Calendar}
-          value={formData.deadline}
-          onChange={(e) =>
-            setFormData({ ...formData, deadline: e.target.value })
-          }
-          error={errors.deadline}
-          min={new Date().toISOString().split("T")[0]}
-        />
+          <Input
+            label="Deadline"
+            type="date"
+            icon={Calendar}
+            value={formData.deadline}
+            onChange={(e) =>
+              setFormData({ ...formData, deadline: e.target.value })
+            }
+            error={errors.deadline}
+            min={new Date().toISOString().split("T")[0]}
+          />
 
-        <Button type="submit" fullWidth size="lg">
-          {isEdit ? "Update Goal" : "Create Goal"}
-        </Button>
-      </form>
+          <Button type="submit" fullWidth size="lg">
+            {isEdit ? "Update Goal" : "Create Goal"}
+          </Button>
+        </form>
+      </div>
     </BottomSheet>
   );
 };

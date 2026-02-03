@@ -56,7 +56,7 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit, savedCards = [] }) => {
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} title="Add Transaction">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 pb-28">
         {/* Type Toggle */}
         <div className="flex gap-2 p-1 bg-dark-bg rounded-xl">
           <button

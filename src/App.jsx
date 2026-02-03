@@ -8,24 +8,25 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ExpenseProvider } from "./context/ExpenseContext";
-import Login from "../src/pages/Auth/Login";
-import Signup from "../src/pages/Auth/Signup";
-import Dashboard from "../src/pages/Dashboard";
+import Login from "./pages/Auth/Login";
+import Signup from "./pages/Auth/Signup";
+import Dashboard from "./pages/Dashboard";
 import Expenses from "./pages/Expenses";
 import Goals from "./pages/Goals";
 import Insights from "./pages/Insights";
 import Profile from "./pages/Profile";
-import CreditCards from "./pages/CreditCards";
-import Reminders from "./pages/Reminders";
 import {
   Home,
-  ReceiptIndianRupee,
+  Receipt,
   Target,
   BarChart3,
   User,
-  CreditCard,
+  Landmark,
   Bell,
 } from "lucide-react";
+import { ThemeProvider } from "./context/ThemeContext";
+import BankAccounts from "./pages/BankAccounts";
+import Reminders from "./pages/Reminders";
 
 // Protected Route Component
 const ProtectedRoute = () => {
@@ -46,11 +47,11 @@ const ProtectedRoute = () => {
 const Layout = () => {
   const navItems = [
     { path: "/dashboard", icon: Home, label: "Home" },
-    { path: "/expenses", icon: ReceiptIndianRupee, label: "Expenses" },
-    { path: "/cards", icon: CreditCard, label: "Cards" },
+    { path: "/expenses", icon: Receipt, label: "Expenses" },
     { path: "/goals", icon: Target, label: "Goals" },
-    { path: "/reminders", icon: Bell, label: "Reminders" }, // ADD THIS
     { path: "/insights", icon: BarChart3, label: "Insights" },
+    { path: "/reminders", icon: Bell, label: "Reminders" },
+    { path: "/banks", icon: Landmark, label: "Banks" },
     { path: "/profile", icon: User, label: "Profile" },
   ];
 
@@ -61,29 +62,44 @@ const Layout = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-dark-card border-t border-dark-border">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-around py-3">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = window.location.pathname === item.path;
+      <nav className="fixed bottom-0 left-0 right-0 bg-dark-card border-t border-dark-border z-50">
+        <div
+          className="flex items-center py-3 px-2 gap-1 overflow-x-auto"
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          <style>{`div::-webkit-scrollbar { display: none; }`}</style>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = window.location.pathname === item.path;
 
-              return (
-                <a
-                  key={item.path}
-                  href={item.path}
-                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all ${
-                    isActive
-                      ? "text-purple-400"
-                      : "text-gray-400 hover:text-white"
-                  }`}
+            return (
+              <a
+                key={item.path}
+                href={item.path}
+                className={`flex flex-col items-center gap-1 flex-shrink-0 px-4 py-2 rounded-xl transition-all ${
+                  isActive
+                    ? "text-purple-400"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <div
+                  className={`relative ${isActive ? "text-purple-400" : ""}`}
                 >
-                  <Icon size={24} />
-                  <span className="text-xs font-medium">{item.label}</span>
-                </a>
-              );
-            })}
-          </div>
+                  <Icon size={22} />
+                  {isActive && (
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-purple-400 rounded-full" />
+                  )}
+                </div>
+                <span className="text-xs font-medium whitespace-nowrap">
+                  {item.label}
+                </span>
+              </a>
+            );
+          })}
         </div>
       </nav>
     </div>
@@ -93,31 +109,35 @@ const Layout = () => {
 // Main App Component
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ExpenseProvider>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+    <ThemeProvider>
+      {" "}
+      {/* ← NEW outer wrapper */}
+      <BrowserRouter>
+        <AuthProvider>
+          <ExpenseProvider>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
 
-            {/* Protected Routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/expenses" element={<Expenses />} />
-              <Route path="/goals" element={<Goals />} />
-              <Route path="/insights" element={<Insights />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/cards" element={<CreditCards />} />
-              <Route path="/reminders" element={<Reminders />} />
-            </Route>
+              {/* Protected Routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/expenses" element={<Expenses />} />
+                <Route path="/goals" element={<Goals />} />
+                <Route path="/insights" element={<Insights />} />
+                <Route path="/banks" element={<BankAccounts />} />
+                <Route path="/reminders" element={<Reminders />} />
+                <Route path="/profile" element={<Profile />} />
+              </Route>
 
-            {/* Redirect root to dashboard */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </ExpenseProvider>
-      </AuthProvider>
-    </BrowserRouter>
+              {/* Redirect root to dashboard */}
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </ExpenseProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

@@ -18,6 +18,10 @@ import {
   getReminders,
   deleteReminder,
   updateReminder,
+  saveAccount,
+  getAccounts,
+  updateAccountData,
+  deleteAccount,
 } from "../services/expenseService";
 import { getMonthYear } from "../utils/dateUtils";
 
@@ -33,12 +37,16 @@ export const useExpense = () => {
 
 export const ExpenseProvider = ({ children }) => {
   const { user } = useAuth();
+
   const [transactions, setTransactions] = useState([]);
   const [goals, setGoals] = useState([]);
   const [cards, setCards] = useState([]);
   const [budget, setBudget] = useState(50000);
-  const [loading, setLoading] = useState(false);
   const [reminders, setReminders] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  /* ───────────────────────── LOAD ALL DATA ───────────────────────── */
 
   useEffect(() => {
     if (user) {
@@ -47,240 +55,230 @@ export const ExpenseProvider = ({ children }) => {
       setTransactions([]);
       setGoals([]);
       setCards([]);
+      setReminders([]);
+      setAccounts([]);
       setBudget(50000);
     }
   }, [user]);
 
   const loadData = async () => {
-    (loadReminders(), setLoading(true));
+    if (!user) return;
+    setLoading(true);
     try {
       await Promise.all([
+        loadAccounts(),
         loadTransactions(),
         loadGoals(),
         loadCards(),
         loadBudget(),
+        loadReminders(),
       ]);
     } finally {
       setLoading(false);
     }
   };
 
+  /* ───────────────────────── TRANSACTIONS ───────────────────────── */
+
   const loadTransactions = async () => {
     if (!user) return;
     try {
       const data = await getTransactions(user.email);
       setTransactions(data);
-    } catch (error) {
-      console.error("Error loading transactions:", error);
+    } catch (e) {
+      console.error("Error loading transactions:", e);
     }
   };
 
   const addTransaction = async (transaction) => {
     if (!user) return;
-    try {
-      await saveTransaction(user.email, transaction);
-      await loadTransactions();
 
-      // If transaction is linked to a card, update card
-      if (transaction.cardId) {
-        await loadCards();
+    await saveTransaction(user.email, transaction);
+    await loadTransactions();
+
+    // auto-adjust account balance
+    if (transaction.accountId) {
+      const account = accounts.find((a) => a.id === transaction.accountId);
+
+      if (account) {
+        const delta =
+          transaction.type === "income"
+            ? transaction.amount
+            : -transaction.amount;
+
+        await updateAccountData(user.email, transaction.accountId, {
+          balance: account.balance + delta,
+        });
+
+        await loadAccounts();
       }
-    } catch (error) {
-      console.error("Error adding transaction:", error);
-      throw error;
     }
   };
 
-  const removeTransaction = async (transactionId) => {
+  const removeTransaction = async (id) => {
     if (!user) return;
-    try {
-      await deleteTransaction(user.email, transactionId);
-      await loadTransactions();
-    } catch (error) {
-      console.error("Error deleting transaction:", error);
-      throw error;
-    }
+    await deleteTransaction(user.email, id);
+    await loadTransactions();
   };
+
+  /* ───────────────────────── GOALS ───────────────────────── */
 
   const loadGoals = async () => {
     if (!user) return;
-    try {
-      const data = await getGoals(user.email);
-      setGoals(data);
-    } catch (error) {
-      console.error("Error loading goals:", error);
-    }
+    const data = await getGoals(user.email);
+    setGoals(data);
   };
 
   const addGoal = async (goal) => {
     if (!user) return;
-    try {
-      await saveGoal(user.email, goal);
-      await loadGoals();
-    } catch (error) {
-      console.error("Error adding goal:", error);
-      throw error;
-    }
+    await saveGoal(user.email, goal);
+    await loadGoals();
   };
 
-  const modifyGoal = async (goalId, updates) => {
+  const modifyGoal = async (id, updates) => {
     if (!user) return;
-    try {
-      await updateGoal(user.email, goalId, updates);
-      await loadGoals();
-    } catch (error) {
-      console.error("Error updating goal:", error);
-      throw error;
-    }
+    await updateGoal(user.email, id, updates);
+    await loadGoals();
   };
 
-  const removeGoal = async (goalId) => {
+  const removeGoal = async (id) => {
     if (!user) return;
-    try {
-      await deleteGoal(user.email, goalId);
-      await loadGoals();
-    } catch (error) {
-      console.error("Error deleting goal:", error);
-      throw error;
-    }
+    await deleteGoal(user.email, id);
+    await loadGoals();
   };
+
+  /* ───────────────────────── BUDGET ───────────────────────── */
 
   const loadBudget = async () => {
     if (!user) return;
-    try {
-      const currentMonth = getMonthYear();
-      const data = await getBudget(user.email, currentMonth);
-      if (data && data.amount) {
-        setBudget(data.amount);
-      }
-    } catch (error) {
-      console.error("Error loading budget:", error);
-    }
+    const month = getMonthYear();
+    const data = await getBudget(user.email, month);
+    if (data?.amount) setBudget(data.amount);
   };
 
   const updateBudget = async (amount) => {
     if (!user) return;
-    try {
-      const currentMonth = getMonthYear();
-      await saveBudget(user.email, currentMonth, { amount });
-      setBudget(amount);
-    } catch (error) {
-      console.error("Error updating budget:", error);
-      throw error;
-    }
+    const month = getMonthYear();
+    await saveBudget(user.email, month, { amount });
+    setBudget(amount);
   };
+
+  /* ───────────────────────── CARDS ───────────────────────── */
 
   const loadCards = async () => {
     if (!user) return;
-    try {
-      const data = await getCards(user.email);
-      setCards(data);
-    } catch (error) {
-      console.error("Error loading cards:", error);
-    }
+    const data = await getCards(user.email);
+    setCards(data);
   };
 
   const addCard = async (card) => {
     if (!user) return;
-    try {
-      await saveCard(user.email, card);
-      await loadCards();
-    } catch (error) {
-      console.error("Error adding card:", error);
-      throw error;
-    }
+    await saveCard(user.email, card);
+    await loadCards();
   };
 
-  const removeCard = async (cardId) => {
+  const removeCard = async (id) => {
     if (!user) return;
-    try {
-      await deleteCard(user.email, cardId);
-      await loadCards();
-    } catch (error) {
-      console.error("Error deleting card:", error);
-      throw error;
-    }
+    await deleteCard(user.email, id);
+    await loadCards();
   };
 
-  const settleCard = async (cardId) => {
+  const settleCard = async (id) => {
     if (!user) return;
-    try {
-      await updateCard(user.email, cardId, { settled: true });
-      await loadCards();
-    } catch (error) {
-      console.error("Error settling card:", error);
-      throw error;
-    }
+    await updateCard(user.email, id, { settled: true });
+    await loadCards();
   };
+
+  /* ───────────────────────── REMINDERS ───────────────────────── */
 
   const loadReminders = async () => {
     if (!user) return;
-    try {
-      const data = await getReminders(user.email);
-      setReminders(data);
-    } catch (error) {
-      console.error("Error loading reminders:", error);
-    }
+    const data = await getReminders(user.email);
+    setReminders(data);
   };
 
   const addReminder = async (reminder) => {
     if (!user) return;
-    try {
-      await saveReminder(user.email, reminder);
-      await loadReminders();
-    } catch (error) {
-      console.error("Error adding reminder:", error);
-      throw error;
-    }
+    await saveReminder(user.email, reminder);
+    await loadReminders();
   };
 
-  const removeReminder = async (reminderId) => {
+  const removeReminder = async (id) => {
     if (!user) return;
-    try {
-      await deleteReminder(user.email, reminderId);
-      await loadReminders();
-    } catch (error) {
-      console.error("Error deleting reminder:", error);
-      throw error;
-    }
+    await deleteReminder(user.email, id);
+    await loadReminders();
   };
 
-  const toggleReminder = async (reminderId) => {
+  const toggleReminder = async (id) => {
     if (!user) return;
-    try {
-      const reminder = reminders.find((r) => r.id === reminderId);
-      if (reminder) {
-        await updateReminder(user.email, reminderId, {
-          isActive: !reminder.isActive,
-        });
-        await loadReminders();
-      }
-    } catch (error) {
-      console.error("Error toggling reminder:", error);
-      throw error;
-    }
+    const reminder = reminders.find((r) => r.id === id);
+    if (!reminder) return;
+
+    await updateReminder(user.email, id, {
+      isActive: !reminder.isActive,
+    });
+    await loadReminders();
   };
+
+  /* ───────────────────────── ACCOUNTS ───────────────────────── */
+
+  const loadAccounts = async () => {
+    if (!user) return;
+    const data = await getAccounts(user.email);
+    setAccounts(data);
+  };
+
+  const addAccount = async (account) => {
+    if (!user) return;
+    await saveAccount(user.email, account);
+    await loadAccounts();
+  };
+
+  const updateAccount = async (id, updates) => {
+    if (!user) return;
+    await updateAccountData(user.email, id, updates);
+    await loadAccounts();
+  };
+
+  const removeAccount = async (id) => {
+    if (!user) return;
+    await deleteAccount(user.email, id);
+    await loadAccounts();
+  };
+
+  /* ───────────────────────── CONTEXT VALUE ───────────────────────── */
 
   const value = {
     transactions,
     goals,
     cards,
     budget,
+    reminders,
+    accounts,
     loading,
+
     addTransaction,
     removeTransaction,
+
     addGoal,
     modifyGoal,
     removeGoal,
+
     updateBudget,
+
     addCard,
     removeCard,
     settleCard,
-    refreshData: loadData,
-    reminders,
+
     addReminder,
     removeReminder,
     toggleReminder,
+
+    addAccount,
+    updateAccount,
+    removeAccount,
+
+    refreshData: loadData,
   };
 
   return (

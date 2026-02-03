@@ -2,34 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── defaults (dark) ── applied before JS runs so no flash ── */
+:root {
+  --bg-primary: #0d0d0d;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #2d2d2d;
+  --border-color: #2d2d2d;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --accent: #8b5cf6;
+  --accent-light: #8b5cf620;
+  --accent-secondary: #ec4899;
+  --card-bg: #1a1a1a;
+  --input-bg: #1a1a1a;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+}
+
 @layer base {
   * {
-    @apply border-dark-border;
+    @apply border-[var(--border-color)];
   }
 
   body {
-    @apply bg-dark-bg text-white font-sans antialiased;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: "Inter", system-ui, sans-serif;
+    @apply antialiased;
+    transition:
+      background-color 0.3s,
+      color 0.3s;
   }
 
   input,
   textarea,
   select {
-    @apply text-white;
+    color: var(--text-primary);
+    background-color: var(--input-bg);
+  }
+
+  /* placeholder colour */
+  ::placeholder {
+    color: var(--text-muted);
   }
 }
 
 @layer utilities {
+  /* gradient using CSS vars */
   .gradient-primary {
-    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    background: linear-gradient(
+      135deg,
+      var(--accent) 0%,
+      var(--accent-secondary) 100%
+    );
   }
-
   .gradient-card {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    background: linear-gradient(
+      135deg,
+      var(--bg-secondary) 0%,
+      var(--bg-tertiary) 100%
+    );
   }
-
   .glass-effect {
     background: rgba(26, 26, 26, 0.7);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  /* text gradient */
+  .text-gradient {
+    background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }

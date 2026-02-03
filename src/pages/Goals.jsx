@@ -222,7 +222,7 @@ const Goals = () => {
         title="Add Contribution"
       >
         {selectedGoal && (
-          <div className="space-y-6">
+          <div className="space-y-6 overflow-y-auto max-h-[70vh] pb-28">
             <p className="text-gray-400">
               Contributing to{" "}
               <span className="font-semibold text-white">
@@ -278,7 +278,7 @@ const Goals = () => {
         title="Contribution History"
       >
         {selectedGoal && (
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto max-h-[70vh] pb-28">
             <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
               <p className="text-sm text-gray-400 mb-1">
                 Goal: {selectedGoal.title}
@@ -299,7 +299,6 @@ const Goals = () => {
                 {[...selectedGoal.contributions]
                   .sort((a, b) => new Date(b.date) - new Date(a.date))
                   .map((contrib, index) => {
-                    // Find original index in unsorted array
                     const originalIndex = selectedGoal.contributions.findIndex(
                       (c) =>
                         c.amount === contrib.amount &&
@@ -376,7 +375,7 @@ const Goals = () => {
         title="Edit Contribution"
       >
         {selectedGoal && (
-          <div className="space-y-6">
+          <div className="space-y-6 overflow-y-auto max-h-[70vh] pb-28">
             <p className="text-gray-400">
               Editing contribution for{" "}
               <span className="font-semibold text-white">
