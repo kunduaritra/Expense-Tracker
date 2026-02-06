@@ -17,79 +17,84 @@ const CATEGORIES = [
 ];
 
 const RecentTransactions = ({ transactions, onDelete }) => {
-  const getCategoryInfo = (categoryId) => {
-    return CATEGORIES.find((cat) => cat.id === categoryId) || CATEGORIES[9];
-  };
+  const getCategoryInfo = (categoryId) =>
+    CATEGORIES.find((cat) => cat.id === categoryId) || CATEGORIES[9];
 
   const sortedTransactions = [...transactions]
     .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 10);
+    .slice(0, 6); // keep compact
 
   return (
-    <Card>
-      <h3 className="text-lg font-semibold mb-4">Recent Transactions</h3>
+    <Card className="p-0">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-dark-border">
+        <h3 className="font-semibold text-sm">Recent Transactions</h3>
+      </div>
 
       {sortedTransactions.length === 0 ? (
-        <div className="text-center py-8 text-gray-400">
-          <p>No transactions yet</p>
-          <p className="text-sm mt-1">Add your first expense to get started</p>
+        <div className="text-center py-8 text-gray-400 text-sm">
+          No transactions yet
         </div>
       ) : (
-        <div className="space-y-3">
+        <ul className="divide-y divide-dark-border">
           {sortedTransactions.map((transaction) => {
             const category = getCategoryInfo(transaction.category);
             const isIncome = transaction.type === "income";
 
             return (
-              <div
+              <li
                 key={transaction.id}
-                className="flex items-center justify-between p-3 rounded-xl bg-dark-bg hover:bg-opacity-70 transition-all group"
+                className="flex items-center gap-3 px-4 py-3 hover:bg-dark-bg/60 transition-colors group"
               >
-                <div className="flex items-center gap-3 flex-1">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                    style={{ backgroundColor: `${category.color}20` }}
-                  >
-                    {category.emoji}
-                  </div>
-
-                  <div className="flex-1">
-                    <p className="font-medium">
-                      {transaction.description || category.name}
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      {formatDate(transaction.date)} •{" "}
-                      {transaction.paymentMethod}
-                    </p>
-                  </div>
+                {/* Emoji */}
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0"
+                  style={{ backgroundColor: `${category.color}20` }}
+                >
+                  {category.emoji}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <p
-                    className={`font-semibold ${
-                      isIncome ? "text-green-400" : "text-white"
-                    }`}
-                  >
-                    {isIncome ? "+" : "-"}
-                    {formatCurrency(transaction.amount)}
+                {/* Description */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {transaction.description || category.name}
                   </p>
-
-                  {onDelete && (
-                    <button
-                      onClick={() => onDelete(transaction.id)}
-                      className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-500/20 rounded-lg transition-all"
-                    >
-                      <Trash2 size={16} className="text-red-400" />
-                    </button>
-                  )}
+                  <p className="text-xs text-gray-400">
+                    {formatDate(transaction.date)}
+                    {transaction.paymentMethod &&
+                      ` • ${transaction.paymentMethod}`}
+                  </p>
                 </div>
-              </div>
+
+                {/* Amount */}
+                <div
+                  className={`text-sm font-mono font-semibold ${
+                    isIncome ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  {isIncome ? "+" : "-"}
+                  {formatCurrency(transaction.amount)}
+                </div>
+
+                {/* Delete */}
+                {onDelete && (
+                  <button
+                    onClick={() => onDelete(transaction.id)}
+                    className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2
+                      size={16}
+                      className="text-gray-400 hover:text-red-400"
+                    />
+                  </button>
+                )}
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </Card>
   );
 };
 
-export default RecentTransactions;
+export default React.memo(RecentTransactions);

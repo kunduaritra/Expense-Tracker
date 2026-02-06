@@ -46,12 +46,12 @@ const SMSParser = ({ isOpen, onClose, onSubmit }) => {
       }}
       title="Parse SMS Transaction"
     >
-      {/* Scrollable container */}
+      {/* Outer container */}
       <div className="flex flex-col max-h-[80vh] overflow-hidden">
-        <div className="overflow-y-auto px-4 pt-4 pb-[100px] space-y-6">
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-20">
           {step === 1 ? (
             <div className="space-y-4">
-              {/* SMS Textarea */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Paste Transaction SMS
@@ -59,7 +59,10 @@ const SMSParser = ({ isOpen, onClose, onSubmit }) => {
                 <textarea
                   value={smsText}
                   onChange={(e) => setSmsText(e.target.value)}
-                  placeholder="Paste your bank transaction SMS here..."
+                  placeholder="Paste your bank transaction SMS here...
+
+Example:
+Rs 500.00 debited from A/c XX1234 on 15-Dec-24 at Swiggy Mumbai via UPI/123456789"
                   className="w-full h-48 px-4 py-3 bg-dark-card rounded-xl border border-dark-border text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 resize-none"
                 />
               </div>
@@ -74,10 +77,16 @@ const SMSParser = ({ isOpen, onClose, onSubmit }) => {
               </Button>
             </div>
           ) : (
-            <>
-              {/* Parsed Data Form */}
-              {/* ... all the parsedData inputs ... */}
-              {/* Example Amount */}
+            <div className="space-y-6">
+              {/* Success banner */}
+              <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                <p className="text-sm text-green-400 flex items-center gap-2">
+                  <Sparkles size={16} />
+                  SMS parsed successfully! Review the details below.
+                </p>
+              </div>
+
+              {/* Amount */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Amount
@@ -95,22 +104,79 @@ const SMSParser = ({ isOpen, onClose, onSubmit }) => {
                 />
               </div>
 
-              {/* Add all other fields: Merchant, Category, Date, Payment Method */}
-            </>
+              {/* Merchant */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Merchant / Description
+                </label>
+                <input
+                  type="text"
+                  value={parsedData.merchant}
+                  onChange={(e) =>
+                    setParsedData({ ...parsedData, merchant: e.target.value })
+                  }
+                  className="w-full px-4 py-3 bg-dark-card rounded-xl border border-dark-border text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  Category
+                </label>
+                <CategoryPicker
+                  selected={parsedData.category}
+                  onSelect={(category) =>
+                    setParsedData({ ...parsedData, category })
+                  }
+                />
+              </div>
+
+              {/* Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={parsedData.date}
+                  onChange={(e) =>
+                    setParsedData({ ...parsedData, date: e.target.value })
+                  }
+                  className="w-full px-4 py-3 bg-dark-card rounded-xl border border-dark-border text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              {/* Payment Method */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Payment Method
+                </label>
+                <input
+                  type="text"
+                  value={parsedData.paymentMethod}
+                  onChange={(e) =>
+                    setParsedData({
+                      ...parsedData,
+                      paymentMethod: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 bg-dark-card rounded-xl border border-dark-border text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button variant="secondary" onClick={handleBack} fullWidth>
+                  Back
+                </Button>
+                <Button onClick={handleConfirm} fullWidth>
+                  Confirm & Add
+                </Button>
+              </div>
+            </div>
           )}
         </div>
-
-        {/* Sticky button container */}
-        {step === 2 && (
-          <div className="fixed bottom-[60px] left-0 right-0 px-4 pb-4 bg-dark-bg border-t border-dark-border flex gap-3">
-            <Button variant="secondary" onClick={handleBack} fullWidth>
-              Back
-            </Button>
-            <Button onClick={handleConfirm} fullWidth>
-              Confirm & Add
-            </Button>
-          </div>
-        )}
       </div>
     </BottomSheet>
   );

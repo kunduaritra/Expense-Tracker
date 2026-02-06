@@ -32,6 +32,7 @@ const Dashboard = () => {
   const [showSMSParser, setShowSMSParser] = useState(false);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [budgetInput, setBudgetInput] = useState("50000");
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   // Load budget
   useEffect(() => {
@@ -43,7 +44,7 @@ const Dashboard = () => {
   // Calculate stats
   const currentMonth = getMonthYear();
   const monthTransactions = transactions.filter((t) =>
-    t.date.startsWith(currentMonth)
+    t.date.startsWith(currentMonth),
   );
 
   const totalIncome = monthTransactions
@@ -80,6 +81,31 @@ const Dashboard = () => {
     }
   };
 
+  const topCategories = categoryBreakdown.slice(0, 3);
+
+  const othersAmount = categoryBreakdown
+    .slice(3)
+    .reduce((sum, c) => sum + c.amount, 0);
+
+  const collapsedCategories = [
+    ...topCategories,
+    ...(othersAmount > 0
+      ? [
+          {
+            id: "others",
+            name: "Others",
+            emoji: "📦",
+            color: "#64748B",
+            amount: othersAmount,
+          },
+        ]
+      : []),
+  ];
+
+  const visibleCategories = showAllCategories
+    ? categoryBreakdown
+    : collapsedCategories;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -105,88 +131,114 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatsCard
           title="Total Income"
           amount={totalIncome}
           icon={TrendingUp}
-          color="green"
+          type="income"
         />
+
         <StatsCard
           title="Total Expenses"
           amount={totalExpenses}
           icon={TrendingDown}
-          color="red"
+          type="expense"
         />
         <StatsCard
           title="Savings"
           amount={savings}
           icon={Wallet}
-          color="purple"
+          type={savings >= 0 ? "income" : "expense"}
         />
       </div>
 
       {/* Budget Overview Card */}
-      <Card gradient className="relative overflow-hidden">
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-1">Monthly Budget</h3>
-              <p className="text-sm text-gray-400">
-                {formatCurrency(monthlyBudget - totalExpenses)} remaining
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-3xl font-bold">{budgetUsed.toFixed(0)}%</p>
-              <p className="text-sm text-gray-400">used</p>
-            </div>
+      <Card>
+        {/* Top */}
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <p className="text-xs text-gray-400 mb-1">Remaining Budget</p>
+            <p className="text-3xl font-bold font-mono">
+              {formatCurrency(monthlyBudget - totalExpenses)}
+            </p>
           </div>
 
-          {/* Progress Bar */}
-          <div className="h-3 bg-dark-bg rounded-full overflow-hidden mb-4">
-            <div
-              className={`h-full transition-all duration-500 ${
-                budgetUsed >= 90
-                  ? "bg-red-500"
-                  : budgetUsed >= 70
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-medium ${
+              budgetUsed >= 90
+                ? "bg-red-500/15 text-red-400"
+                : budgetUsed >= 70
+                  ? "bg-orange-500/15 text-orange-400"
+                  : "bg-green-500/15 text-green-400"
+            }`}
+          >
+            {budgetUsed.toFixed(0)}% Used
+          </span>
+        </div>
+
+        {/* Progress */}
+        <div className="h-2 bg-dark-bg rounded-full overflow-hidden mb-3">
+          <div
+            className={`h-full transition-all duration-500 ${
+              budgetUsed >= 90
+                ? "bg-red-500"
+                : budgetUsed >= 70
                   ? "bg-orange-500"
                   : "gradient-primary"
-              }`}
-              style={{ width: `${Math.min(budgetUsed, 100)}%` }}
-            />
-          </div>
+            }`}
+            style={{ width: `${Math.min(budgetUsed, 100)}%` }}
+          />
+        </div>
 
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">
-              Spent: {formatCurrency(totalExpenses)}
-            </span>
-            <span className="text-gray-400">
-              Budget: {formatCurrency(monthlyBudget)}
-            </span>
-          </div>
+        {/* Footer */}
+        <div className="flex justify-between text-xs text-gray-400">
+          <span>Spent: {formatCurrency(totalExpenses)}</span>
+          <span>Budget: {formatCurrency(monthlyBudget)}</span>
         </div>
       </Card>
 
       {/* Category Breakdown */}
       {categoryBreakdown.length > 0 && (
         <Card>
-          <h3 className="text-lg font-semibold mb-4">
-            {new Date().toLocaleDateString("en-US", { month: "long" })} Expenses
-            Breakdown
-          </h3>
-          <div className="space-y-3">
-            {categoryBreakdown.map((category) => {
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold">
+              {new Date().toLocaleDateString("en-US", { month: "long" })}{" "}
+              Spending
+            </h3>
+
+            {categoryBreakdown.length > 2 && (
+              <div className="flex justify-center pt-3">
+                <button
+                  onClick={() => setShowAllCategories((prev) => !prev)}
+                  className="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 transition-all duration-200"
+                >
+                  <span
+                    className={`text-purple-400 transition-transform duration-200 ${showAllCategories ? "rotate-180" : ""}`}
+                  >
+                    ▼
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3 transition-all">
+            {visibleCategories.map((category) => {
               const percentage = (category.amount / totalExpenses) * 100;
 
               return (
                 <div key={category.id}>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xl">{category.emoji}</span>
-                      <span className="font-medium">{category.name}</span>
+                      <span className="text-lg">{category.emoji}</span>
+                      <span className="text-sm font-medium">
+                        {category.name}
+                      </span>
                     </div>
+
                     <div className="text-right">
-                      <p className="font-semibold">
+                      <p className="text-sm font-semibold">
                         {formatCurrency(category.amount)}
                       </p>
                       <p className="text-xs text-gray-400">
@@ -194,9 +246,10 @@ const Dashboard = () => {
                       </p>
                     </div>
                   </div>
+
                   <div className="h-2 bg-dark-bg rounded-full overflow-hidden">
                     <div
-                      className="h-full transition-all duration-500"
+                      className="h-full transition-all duration-300"
                       style={{
                         width: `${percentage}%`,
                         backgroundColor: category.color,
@@ -250,40 +303,105 @@ const Dashboard = () => {
       {/* Budget Settings Modal */}
       {showBudgetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/70 backdrop-blur-md"
             onClick={() => setShowBudgetModal(false)}
           />
-          <div className="relative bg-dark-card p-6 rounded-2xl max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4">Set Monthly Budget</h3>
-            <p className="text-gray-400 mb-4">
-              Set your monthly spending limit to track expenses better
+
+          {/* Modal */}
+          <div className="relative bg-gradient-to-br from-dark-card to-dark-card/95 p-8 rounded-3xl max-w-md w-full shadow-2xl border border-purple-500/10 animate-modalSlideIn">
+            {/* Close button */}
+            <button
+              onClick={() => setShowBudgetModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-dark-bg/50 hover:bg-dark-bg transition-colors text-gray-400 hover:text-white"
+            >
+              ✕
+            </button>
+
+            {/* Icon */}
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center border border-purple-500/20">
+              <span className="text-3xl">💰</span>
+            </div>
+
+            {/* Header */}
+            <h3 className="text-2xl font-bold text-center mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+              Set Monthly Budget
+            </h3>
+            <p className="text-gray-400 text-center text-sm mb-6">
+              Define your spending limit to stay on track
             </p>
 
-            <input
-              type="number"
-              value={budgetInput}
-              onChange={(e) => setBudgetInput(e.target.value)}
-              placeholder="50000"
-              className="w-full px-4 py-3 bg-dark-bg rounded-xl border border-dark-border text-white text-xl font-bold mb-4 focus:outline-none focus:border-purple-500"
-              step="1000"
-            />
+            {/* Input with currency symbol */}
+            <div className="relative mb-6">
+              <span className="absolute left-4 top-4 text-2xl font-bold text-purple-400">
+                ₹
+              </span>
+              <input
+                type="number"
+                value={budgetInput}
+                onChange={(e) => setBudgetInput(e.target.value)}
+                placeholder="50,000"
+                className="w-full pl-12 pr-4 py-4 bg-dark-bg/50 rounded-2xl border-2 border-dark-border text-white text-2xl font-bold placeholder:text-gray-600 focus:outline-none focus:border-purple-500 focus:bg-dark-bg transition-all"
+                step="1000"
+                autoFocus
+              />
 
+              {/* Quick amount buttons */}
+              <div className="flex gap-2 mt-3">
+                {[10000, 25000, 50000, 100000].map((amount) => (
+                  <button
+                    key={amount}
+                    onClick={() => setBudgetInput(amount.toString())}
+                    className="flex-1 px-2 py-1.5 text-xs font-medium bg-dark-bg/50 hover:bg-purple-500/20 border border-dark-border hover:border-purple-500/30 rounded-lg transition-all text-gray-400 hover:text-purple-400"
+                  >
+                    {(amount / 1000).toFixed(0)}K
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Action buttons */}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowBudgetModal(false)}
-                className="flex-1 py-3 bg-dark-bg hover:bg-opacity-70 rounded-xl font-medium transition-all"
+                className="flex-1 py-3.5 bg-dark-bg/80 hover:bg-dark-bg rounded-xl font-semibold transition-all text-gray-300 hover:text-white border border-dark-border hover:border-gray-600"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveBudget}
-                className="flex-1 py-3 gradient-primary rounded-xl font-medium transition-all hover:opacity-90"
+                className="flex-1 py-3.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-xl font-semibold transition-all shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-[0.98]"
               >
                 Save Budget
               </button>
             </div>
+
+            {/* Optional: Current budget indicator */}
+            {budget > 0 && (
+              <p className="text-center text-xs text-gray-500 mt-4">
+                Current budget: {formatCurrency(budget)}
+              </p>
+            )}
           </div>
+
+          {/* Add animation styles */}
+          <style jsx>{`
+            @keyframes modalSlideIn {
+              from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+              }
+              to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+              }
+            }
+
+            .animate-modalSlideIn {
+              animation: modalSlideIn 0.2s ease-out;
+            }
+          `}</style>
         </div>
       )}
     </div>

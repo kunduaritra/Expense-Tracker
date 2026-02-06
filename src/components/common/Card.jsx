@@ -40,7 +40,7 @@ const Card = ({
   <div
     onClick={onClick}
     className={`
-      rounded-2xl p-6 transition-all duration-200
+      rounded-2xl p-6 transition-all duration-200 
       ${gradient ? "gradient-card" : ""}
       ${glass ? "glass-effect" : ""}
       ${!gradient && !glass ? "border" : ""}
