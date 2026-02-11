@@ -70,6 +70,21 @@ export const saveGoal = async (email, goal) => {
   return await response.json();
 };
 
+export const updateTransactionData = async (email, transactionId, updates) => {
+  const sanitized = sanitizeEmail(email);
+
+  const response = await fetch(
+    `${DB_URL}/expense/${sanitized}/transactions/${transactionId}.json`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    },
+  );
+
+  return await response.json();
+};
+
 export const getGoals = async (email) => {
   const sanitized = sanitizeEmail(email);
 

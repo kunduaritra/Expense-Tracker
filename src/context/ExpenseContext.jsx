@@ -22,6 +22,7 @@ import {
   getAccounts,
   updateAccountData,
   deleteAccount,
+  updateTransactionData,
 } from "../services/expenseService";
 import { getMonthYear } from "../utils/dateUtils";
 
@@ -112,6 +113,74 @@ export const ExpenseProvider = ({ children }) => {
 
         await loadAccounts();
       }
+    }
+  };
+
+  const updateTransaction = async (transactionId, updates) => {
+    if (!user) return;
+    try {
+      // Get the old transaction first
+      const oldTransaction = transactions.find((t) => t.id === transactionId);
+      if (!oldTransaction) return;
+
+      // Update in Firebase
+      await updateTransactionData(user.email, transactionId, updates);
+
+      // Refresh transactions
+      await loadTransactions();
+
+      // Update account balances if account changed or amount changed
+      if (oldTransaction.accountId || updates.accountId) {
+        const oldAccountId = oldTransaction.accountId;
+        const newAccountId =
+          updates.accountId !== undefined ? updates.accountId : oldAccountId;
+        const oldAmount = oldTransaction.amount;
+        const newAmount =
+          updates.amount !== undefined ? updates.amount : oldAmount;
+        const oldType = oldTransaction.type;
+        const newType = updates.type !== undefined ? updates.type : oldType;
+
+        // Revert old account balance
+        if (oldAccountId) {
+          const oldAccount = accounts.find((a) => a.id === oldAccountId);
+          if (oldAccount) {
+            const oldDelta = oldType === "income" ? oldAmount : -oldAmount;
+            await updateAccountData(user.email, oldAccountId, {
+              balance: oldAccount.balance - oldDelta,
+            });
+          }
+        }
+
+        // Apply new account balance (only if different from old)
+        if (newAccountId && newAccountId !== oldAccountId) {
+          const newAccount = accounts.find((a) => a.id === newAccountId);
+          if (newAccount) {
+            const newDelta = newType === "income" ? newAmount : -newAmount;
+            await updateAccountData(user.email, newAccountId, {
+              balance: newAccount.balance + newDelta,
+            });
+          }
+        } else if (
+          newAccountId === oldAccountId &&
+          (oldAmount !== newAmount || oldType !== newType)
+        ) {
+          // Same account but amount/type changed
+          const account = accounts.find((a) => a.id === newAccountId);
+          if (account) {
+            const oldDelta = oldType === "income" ? oldAmount : -oldAmount;
+            const newDelta = newType === "income" ? newAmount : -newAmount;
+            const balanceChange = newDelta - oldDelta;
+            await updateAccountData(user.email, newAccountId, {
+              balance: account.balance + balanceChange,
+            });
+          }
+        }
+
+        await loadAccounts();
+      }
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+      throw error;
     }
   };
 
@@ -279,6 +348,7 @@ export const ExpenseProvider = ({ children }) => {
     removeAccount,
 
     refreshData: loadData,
+    updateTransaction,
   };
 
   return (

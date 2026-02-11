@@ -1,8 +1,20 @@
 import React, { useState, useMemo } from "react";
 import { useExpense } from "../hooks/useExpenses";
 import Card from "../components/common/Card";
+import BottomSheet from "../components/common/BottomSheet";
+import Button from "../components/common/Button";
+import Input from "../components/common/Input";
+import CategoryPicker from "../components/expense/CategoryPicker";
 import { formatCurrency, formatDate } from "../utils/formatters";
-import { Filter, Search, Trash2, TrendingDown, Calendar } from "lucide-react";
+import {
+  Search,
+  Trash2,
+  Edit2,
+  IndianRupee,
+  Calendar,
+  FileText,
+  CreditCard,
+} from "lucide-react";
 
 const CATEGORIES = [
   { id: "all", name: "All Categories", emoji: "📊", color: "#8B5CF6" },
@@ -18,12 +30,135 @@ const CATEGORIES = [
   { id: "others", name: "Others", emoji: "📦", color: "#6B7280" },
 ];
 
+const PAYMENT_METHODS = ["Cash", "UPI", "Card", "Credit Card", "Net Banking"];
+
+// Transaction Row Component with Edit
+const TransactionRow = ({
+  transaction,
+  category,
+  onDelete,
+  onEdit,
+  accounts,
+}) => {
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  const isIncome = transaction.type === "income";
+  const description = transaction.description || category.name;
+  const maxLength = 30;
+  const needsTruncate = description.length > maxLength;
+
+  const account = accounts?.find((a) => a.id === transaction.accountId);
+
+  return (
+    <div className="group relative flex items-start gap-3 p-3 rounded-xl bg-dark-bg hover:bg-dark-border/50 transition-all border border-transparent hover:border-purple-500/20">
+      {/* Emoji Icon */}
+      <div
+        className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-lg flex-shrink-0"
+        style={{
+          backgroundColor: `${category.color}20`,
+          border: `1px solid ${category.color}40`,
+        }}
+      >
+        {category.emoji}
+      </div>
+
+      {/* Description */}
+      <div className="flex-1 min-w-0">
+        <div className="space-y-0.5">
+          {needsTruncate && !showFullDescription ? (
+            <p className="text-sm font-semibold text-white leading-tight">
+              {description.substring(0, maxLength)}...
+              <button
+                onClick={() => setShowFullDescription(true)}
+                className="ml-1 text-xs text-purple-400 hover:text-purple-300 font-medium"
+              >
+                more
+              </button>
+            </p>
+          ) : (
+            <div>
+              <p className="text-sm font-semibold text-white break-words leading-tight">
+                {description}
+              </p>
+              {needsTruncate && showFullDescription && (
+                <button
+                  onClick={() => setShowFullDescription(false)}
+                  className="text-xs text-purple-400 hover:text-purple-300 font-medium"
+                >
+                  show less
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <span>{transaction.paymentMethod}</span>
+            {account && (
+              <>
+                <span>•</span>
+                <span className="truncate">{account.bankName}</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Edit/Delete Buttons */}
+      <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-all flex-shrink-0">
+        <button
+          onClick={() => onEdit(transaction)}
+          className="p-1.5 rounded-lg hover:bg-blue-500/20 transition-all"
+          title="Edit transaction"
+        >
+          <Edit2 size={14} className="text-blue-400" />
+        </button>
+        <button
+          onClick={() => onDelete(transaction.id)}
+          className="p-1.5 rounded-lg hover:bg-red-500/20 transition-all"
+          title="Delete transaction"
+        >
+          <Trash2 size={14} className="text-red-400" />
+        </button>
+      </div>
+
+      {/* Amount */}
+      <span
+        className={`text-sm font-bold px-2.5 py-1 rounded-lg whitespace-nowrap flex-shrink-0 ${
+          isIncome
+            ? "text-green-400 bg-green-500/10"
+            : "text-red-400 bg-red-500/10"
+        }`}
+      >
+        {isIncome ? "+" : "−"}
+        {formatCurrency(transaction.amount)}
+      </span>
+    </div>
+  );
+};
+
 const Expenses = () => {
-  const { transactions, removeTransaction } = useExpense();
+  const {
+    transactions,
+    removeTransaction,
+    updateTransaction,
+    accounts,
+    expenseCategories,
+    incomeCategories,
+  } = useExpense();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [editForm, setEditForm] = useState({
+    amount: "",
+    category: "",
+    date: "",
+    description: "",
+    paymentMethod: "UPI",
+    type: "expense",
+    accountId: null,
+  });
+  const [errors, setErrors] = useState({});
 
-  // Get available years and set up year selector state at the top level
   const availableYears = useMemo(() => {
     return [
       ...new Set(transactions.map((t) => new Date(t.date).getFullYear())),
@@ -45,12 +180,10 @@ const Expenses = () => {
     return matchesCategory && matchesSearch;
   });
 
-  // Sort by date (newest first)
   const sortedTransactions = [...filteredTransactions].sort(
     (a, b) => new Date(b.date) - new Date(a.date),
   );
 
-  // Group by month, then by date
   const groupedByMonth = sortedTransactions.reduce((groups, transaction) => {
     const date = new Date(transaction.date);
     const monthKey = date.toLocaleDateString("en-US", {
@@ -69,7 +202,7 @@ const Expenses = () => {
     return CATEGORIES.find((cat) => cat.id === categoryId) || CATEGORIES[10];
   };
 
-  // Calculate top 3 categories for selected year
+  // Top 3 categories
   const top3CategoriesData = useMemo(() => {
     const yearTransactions = transactions.filter((t) => {
       const transactionYear = new Date(t.date).getFullYear();
@@ -100,6 +233,48 @@ const Expenses = () => {
     return { top3, totalYearSpending };
   }, [transactions, selectedYear]);
 
+  // Handle Edit
+  const handleEdit = (transaction) => {
+    setEditingTransaction(transaction);
+    setEditForm({
+      amount: transaction.amount.toString(),
+      category: transaction.category,
+      date: transaction.date,
+      description: transaction.description || "",
+      paymentMethod: transaction.paymentMethod,
+      type: transaction.type,
+      accountId: transaction.accountId || null,
+    });
+    setErrors({});
+    setShowEditModal(true);
+  };
+
+  const handleUpdateTransaction = async () => {
+    const newErrors = {};
+    if (!editForm.amount || editForm.amount <= 0) {
+      newErrors.amount = "Please enter a valid amount";
+    }
+    if (!editForm.category) {
+      newErrors.category = "Please select a category";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    try {
+      await updateTransaction(editingTransaction.id, {
+        ...editForm,
+        amount: parseFloat(editForm.amount),
+      });
+      setShowEditModal(false);
+      setEditingTransaction(null);
+    } catch (error) {
+      alert("Failed to update transaction");
+    }
+  };
+
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
@@ -113,10 +288,9 @@ const Expenses = () => {
           </p>
         </div>
 
-        {/* Top 3 Spending Categories - Yearly */}
+        {/* Top 3 Categories */}
         {top3CategoriesData && (
           <Card className="p-5 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-blue-500/5 border-purple-500/10">
-            {/* Header with Year Selector */}
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-sm font-semibold text-gray-300">
@@ -132,7 +306,6 @@ const Expenses = () => {
                   <span className="text-lg">🏆</span>
                 </div>
 
-                {/* Year Selector */}
                 {availableYears.length > 0 && (
                   <select
                     value={selectedYear}
@@ -149,7 +322,6 @@ const Expenses = () => {
               </div>
             </div>
 
-            {/* Top 3 Categories */}
             <div className="space-y-3">
               {top3CategoriesData.top3.map((category, index) => (
                 <div key={category.id} className="group">
@@ -165,7 +337,6 @@ const Expenses = () => {
                         >
                           {category.emoji}
                         </div>
-                        {/* Rank badge */}
                         <div
                           className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
                           style={{
@@ -199,7 +370,6 @@ const Expenses = () => {
                     </div>
                   </div>
 
-                  {/* Progress bar */}
                   <div className="h-1.5 bg-dark-bg rounded-full overflow-hidden">
                     <div
                       className="h-full transition-all duration-500 rounded-full"
@@ -216,7 +386,7 @@ const Expenses = () => {
         )}
       </div>
 
-      {/* Search Bar */}
+      {/* Search */}
       <div className="relative">
         <Search
           className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
@@ -231,7 +401,7 @@ const Expenses = () => {
         />
       </div>
 
-      {/* Category Filter Pills */}
+      {/* Category Filters */}
       <div className="relative">
         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
           {CATEGORIES.map((category) => {
@@ -254,7 +424,7 @@ const Expenses = () => {
         </div>
       </div>
 
-      {/* Empty State */}
+      {/* Transactions List */}
       {Object.keys(groupedByMonth).length === 0 ? (
         <Card className="p-12">
           <div className="text-center text-gray-400">
@@ -281,7 +451,6 @@ const Expenses = () => {
 
             return (
               <div key={month} className="space-y-3">
-                {/* Month Header */}
                 <div className="flex items-center justify-between px-1">
                   <h2 className="text-lg font-bold text-gray-300">{month}</h2>
                   <div className="flex items-center gap-2">
@@ -294,93 +463,178 @@ const Expenses = () => {
                   </div>
                 </div>
 
-                {/* Dates */}
                 <Card className="p-4 space-y-4">
-                  {Object.entries(dates).map(([date, dayTransactions]) => (
-                    <div key={date}>
-                      {/* Date Header */}
-                      <div className="flex items-center justify-between mb-3 pb-2 border-b border-dark-border/50">
-                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                          {formatDate(date)}
-                        </span>
-                        <span className="text-xs text-gray-500 font-medium">
-                          {dayTransactions.length}{" "}
-                          {dayTransactions.length === 1
-                            ? "transaction"
-                            : "transactions"}
-                        </span>
-                      </div>
+                  {Object.entries(dates).map(([date, dayTransactions]) => {
+                    // Calculate daily total
+                    const dayTotal = dayTransactions
+                      .filter((t) => t.type === "expense")
+                      .reduce((sum, t) => sum + t.amount, 0);
 
-                      {/* Transactions */}
-                      <div className="space-y-2">
-                        {dayTransactions.map((transaction) => {
-                          const category = getCategoryInfo(
-                            transaction.category,
-                          );
-                          const isIncome = transaction.type === "income";
-
-                          return (
-                            <div
-                              key={transaction.id}
-                              className="group relative flex items-center justify-between p-3 rounded-xl bg-dark-bg hover:bg-dark-border/50 transition-all border border-transparent hover:border-purple-500/20"
-                            >
-                              {/* Left Side */}
-                              <div className="flex items-center gap-3 flex-1">
-                                <div
-                                  className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shadow-lg"
-                                  style={{
-                                    backgroundColor: `${category.color}20`,
-                                    border: `1px solid ${category.color}40`,
-                                  }}
-                                >
-                                  {category.emoji}
-                                </div>
-
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold text-white truncate">
-                                    {transaction.description || category.name}
-                                  </p>
-                                  <p className="text-xs text-gray-400 mt-0.5">
-                                    {transaction.paymentMethod}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Right Side */}
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className={`text-sm font-bold px-3 py-1.5 rounded-lg ${
-                                    isIncome
-                                      ? "text-green-400 bg-green-500/10"
-                                      : "text-red-400 bg-red-500/10"
-                                  }`}
-                                >
-                                  {isIncome ? "+" : "−"}
-                                  {formatCurrency(transaction.amount)}
+                    return (
+                      <div key={date}>
+                        <div className="flex items-center justify-between mb-3 pb-2 border-b border-dark-border/50">
+                          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                            {formatDate(date)}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">
+                              {dayTransactions.length} txn
+                              {dayTransactions.length !== 1 ? "s" : ""}
+                            </span>
+                            {dayTotal > 0 && (
+                              <>
+                                <span className="text-xs text-gray-600">•</span>
+                                <span className="text-xs text-red-400 font-semibold">
+                                  −{formatCurrency(dayTotal)}
                                 </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
 
-                                <button
-                                  onClick={() =>
-                                    removeTransaction(transaction.id)
-                                  }
-                                  className="opacity-0 group-hover:opacity-100 p-2 rounded-lg hover:bg-red-500/20 transition-all"
-                                  title="Delete transaction"
-                                >
-                                  <Trash2 size={16} className="text-red-400" />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
+                        <div className="space-y-2">
+                          {dayTransactions.map((transaction) => (
+                            <TransactionRow
+                              key={transaction.id}
+                              transaction={transaction}
+                              category={getCategoryInfo(transaction.category)}
+                              onDelete={removeTransaction}
+                              onEdit={handleEdit}
+                              accounts={accounts}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </Card>
               </div>
             );
           })}
         </div>
       )}
+
+      {/* Edit Transaction Modal */}
+      <BottomSheet
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingTransaction(null);
+        }}
+        title="Edit Transaction"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleUpdateTransaction();
+          }}
+          className="space-y-6 pb-24"
+        >
+          {/* Type Toggle */}
+          <div className="flex gap-2 p-1 bg-dark-bg rounded-xl">
+            <button
+              type="button"
+              onClick={() =>
+                setEditForm({ ...editForm, type: "expense", category: "food" })
+              }
+              className={`flex-1 py-2 rounded-lg font-medium transition-all ${
+                editForm.type === "expense"
+                  ? "bg-red-500 text-white"
+                  : "text-gray-400"
+              }`}
+            >
+              Expense
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setEditForm({ ...editForm, type: "income", category: "salary" })
+              }
+              className={`flex-1 py-2 rounded-lg font-medium transition-all ${
+                editForm.type === "income"
+                  ? "bg-green-500 text-white"
+                  : "text-gray-400"
+              }`}
+            >
+              Income
+            </button>
+          </div>
+
+          <Input
+            label="Amount"
+            type="number"
+            icon={IndianRupee}
+            value={editForm.amount}
+            onChange={(e) =>
+              setEditForm({ ...editForm, amount: e.target.value })
+            }
+            placeholder="0.00"
+            error={errors.amount}
+            step="0.01"
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-3">
+              Category
+            </label>
+            <CategoryPicker
+              selected={editForm.category}
+              onSelect={(category) => setEditForm({ ...editForm, category })}
+              type={editForm.type}
+            />
+            {errors.category && (
+              <p className="mt-1 text-sm text-red-400">{errors.category}</p>
+            )}
+          </div>
+
+          <Input
+            label="Date"
+            type="date"
+            icon={Calendar}
+            value={editForm.date}
+            onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-3">
+              Payment Method
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {PAYMENT_METHODS.map((method) => (
+                <button
+                  key={method}
+                  type="button"
+                  onClick={() =>
+                    setEditForm({ ...editForm, paymentMethod: method })
+                  }
+                  className={`p-3 rounded-xl border transition-all ${
+                    editForm.paymentMethod === method
+                      ? "border-purple-500 bg-purple-500/10 text-white"
+                      : "border-dark-border text-gray-400 hover:border-gray-600"
+                  }`}
+                >
+                  {method}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Input
+            label="Description (Optional)"
+            type="text"
+            icon={FileText}
+            value={editForm.description}
+            onChange={(e) =>
+              setEditForm({ ...editForm, description: e.target.value })
+            }
+            placeholder="Add a note..."
+          />
+
+          <Button type="submit" fullWidth size="lg">
+            Update Transaction
+          </Button>
+        </form>
+      </BottomSheet>
     </div>
   );
 };

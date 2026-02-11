@@ -17,7 +17,7 @@ import Insights from "./pages/Insights";
 import Profile from "./pages/Profile";
 import {
   Home,
-  Receipt,
+  ReceiptIndianRupee,
   Target,
   BarChart3,
   User,
@@ -47,7 +47,7 @@ const ProtectedRoute = () => {
 const Layout = () => {
   const navItems = [
     { path: "/dashboard", icon: Home, label: "Home" },
-    { path: "/expenses", icon: Receipt, label: "Expenses" },
+    { path: "/expenses", icon: ReceiptIndianRupee, label: "Expenses" },
     { path: "/goals", icon: Target, label: "Goals" },
     { path: "/insights", icon: BarChart3, label: "Insights" },
     { path: "/reminders", icon: Bell, label: "Reminders" },
