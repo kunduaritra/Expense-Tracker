@@ -27,6 +27,15 @@ const CATEGORIES = [
   { id: "education", name: "Education", emoji: "📚", color: "#6366F1" },
   { id: "travel", name: "Travel", emoji: "✈️", color: "#06B6D4" },
   { id: "investment", name: "Investment", emoji: "📈", color: "#10B981" },
+  { id: "personal-care", name: "Personal Care", emoji: "🧴", color: "#F43F5E" },
+  { id: "fitness", name: "Gym & Fitness", emoji: "🏋️", color: "#22C55E" },
+  { id: "gifts", name: "Gifts & Donations", emoji: "🎁", color: "#E11D48" },
+  { id: "family", name: "Family Expenses", emoji: "👨‍👩‍👧‍👦", color: "#9333EA" },
+  { id: "rent", name: "Rent", emoji: "🏠", color: "#A855F7" },
+  { id: "emi", name: "EMI / Loans", emoji: "💳", color: "#DC2626" },
+  { id: "insurance", name: "Insurance", emoji: "🛡️", color: "#0EA5E9" },
+  { id: "tax", name: "Taxes", emoji: "🧾", color: "#F97316" },
+  { id: "subscriptions", name: "Subscriptions", emoji: "📺", color: "#7C3AED" },
   { id: "others", name: "Others", emoji: "📦", color: "#6B7280" },
 ];
 
