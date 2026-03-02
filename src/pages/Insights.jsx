@@ -1,6 +1,3 @@
-// ============================================================================
-// ADVANCED ANALYTICS — src/pages/Insights.jsx  (REPLACE ENTIRE FILE)
-// ============================================================================
 import React, { useState, useMemo } from "react";
 import { useExpense } from "../hooks/useExpenses";
 import Card from "../components/common/Card";
@@ -26,6 +23,7 @@ import {
   Clock,
   ShoppingBag,
   Calendar,
+  ChevronDown,
 } from "lucide-react";
 import { formatCurrency } from "../utils/formatters";
 import { EXPENSE_CATEGORIES } from "../utils/constants";
@@ -45,12 +43,25 @@ const MONTHS = [
   "Nov",
   "Dec",
 ];
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const HOURS = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
 const Insights = () => {
   const { transactions } = useExpense();
-  const [activeTab, setActiveTab] = useState("overview"); // overview | dayTime | merchants | predictions
+  const [activeTab, setActiveTab] = useState("overview");
 
   // ── derived data ──────────────────────────────────────────────
   const expenses = useMemo(
@@ -61,6 +72,24 @@ const Insights = () => {
     () => transactions.filter((t) => t.type === "income"),
     [transactions],
   );
+
+  // ── Month/Year selector for category pie ──
+  const availableMonths = useMemo(() => {
+    const set = new Set(expenses.map((t) => t.date.slice(0, 7)));
+    return [...set].sort((a, b) => b.localeCompare(a)); // newest first
+  }, [expenses]);
+
+  const [selectedMonthKey, setSelectedMonthKey] = useState(() => {
+    // default to current month
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
+
+  // Format "YYYY-MM" -> "Feb 2026"
+  const formatMonthKey = (key) => {
+    const [year, month] = key.split("-");
+    return `${MONTHS[parseInt(month) - 1]} ${year}`;
+  };
 
   // Monthly trend (last 6 months)
   const monthlyTrend = useMemo(() => {
@@ -83,20 +112,20 @@ const Insights = () => {
     });
   }, [expenses, incomes]);
 
-  // Category pie
+  // Category pie - filtered by selectedMonthKey
   const categoryPie = useMemo(() => {
-    const now = new Date();
-    const key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     return EXPENSE_CATEGORIES.map((cat) => ({
       name: cat.name,
       value: expenses
-        .filter((t) => t.date.startsWith(key) && t.category === cat.id)
+        .filter(
+          (t) => t.category === cat.id && t.date.startsWith(selectedMonthKey),
+        )
         .reduce((s, t) => s + t.amount, 0),
       color: cat.color,
     }))
       .filter((c) => c.value > 0)
       .sort((a, b) => b.value - a.value);
-  }, [expenses]);
+  }, [expenses, selectedMonthKey]);
 
   // Day-of-week spending
   const dayOfWeek = useMemo(() => {
@@ -109,7 +138,7 @@ const Insights = () => {
     return buckets;
   }, [expenses]);
 
-  // Hourly spending (using createdAt or fallback hour 12)
+  // Hourly spending
   const hourlySpend = useMemo(() => {
     const buckets = Array.from({ length: 24 }, (_, h) => ({
       hour: `${h}:00`,
@@ -164,7 +193,6 @@ const Insights = () => {
         ? ((thisMonthExp - lastMonthExp) / lastMonthExp) * 100
         : 0;
 
-    // Per-category prediction
     const catPredictions = EXPENSE_CATEGORIES.map((cat) => {
       const thisVal = expenses
         .filter((t) => t.date.startsWith(thisKey) && t.category === cat.id)
@@ -249,55 +277,137 @@ const Insights = () => {
         </ResponsiveContainer>
       </Card>
 
-      {/* Category Pie */}
+      {/* Category Pie with Month/Year Dropdown */}
       <Card>
-        <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
-          <ShoppingBag size={18} className="text-pink-400" /> This Month – By
-          Category
-        </h3>
-        {categoryPie.length === 0 ? (
-          <p className="text-gray-500 text-center py-6">
-            No expenses this month
-          </p>
-        ) : (
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <Pie
-                  data={categoryPie}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={45}
-                  outerRadius={75}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {categoryPie.map((e, i) => (
-                    <Cell key={i} fill={e.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  formatter={(v) => `₹${Number(v).toLocaleString()}`}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            {/* Legend list */}
-            <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center">
-              {categoryPie.map((c, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 text-xs text-gray-300"
-                >
-                  <span
-                    className="inline-block w-3 h-3 rounded-sm"
-                    style={{ background: c.color }}
-                  />
-                  {c.name}
-                </div>
-              ))}
-            </div>
+        {/* Header row with title + month selector */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-semibold flex items-center gap-2">
+            <ShoppingBag size={18} className="text-pink-400" /> By Category
+          </h3>
+
+          {/* Month/Year Dropdown */}
+          <div className="relative">
+            <select
+              value={selectedMonthKey}
+              onChange={(e) => setSelectedMonthKey(e.target.value)}
+              className="appearance-none pl-3 pr-8 py-1.5 bg-dark-bg border border-dark-border rounded-xl text-xs font-medium text-white focus:outline-none focus:border-purple-500 transition-all cursor-pointer"
+              style={{ backgroundImage: "none" }}
+            >
+              {/* Always include current month even if no data */}
+              {(() => {
+                const now = new Date();
+                const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+                const keys = availableMonths.includes(currentKey)
+                  ? availableMonths
+                  : [currentKey, ...availableMonths];
+                return keys.map((key) => (
+                  <option key={key} value={key}>
+                    {formatMonthKey(key)}
+                  </option>
+                ));
+              })()}
+            </select>
+            <ChevronDown
+              size={12}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
           </div>
+        </div>
+
+        {categoryPie.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-sm">
+              No expenses in {formatMonthKey(selectedMonthKey)}
+            </p>
+            <p className="text-gray-600 text-xs mt-1">
+              Try selecting a different month
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie
+                    data={categoryPie}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={75}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {categoryPie.map((e, i) => (
+                      <Cell key={i} fill={e.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    formatter={(v) => `₹${Number(v).toLocaleString()}`}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center">
+                {categoryPie.map((c, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 text-xs text-gray-300"
+                  >
+                    <span
+                      className="inline-block w-3 h-3 rounded-sm"
+                      style={{ background: c.color }}
+                    />
+                    {c.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Category breakdown list */}
+            <div className="mt-4 space-y-2">
+              {categoryPie.slice(0, 5).map((cat, i) => {
+                const total = categoryPie.reduce((s, c) => s + c.value, 0);
+                const pct = total > 0 ? (cat.value / total) * 100 : 0;
+                const catInfo = EXPENSE_CATEGORIES.find(
+                  (c) => c.name === cat.name,
+                );
+                return (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="text-sm w-5 text-center">
+                      {catInfo?.emoji || "📦"}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-gray-300 truncate">
+                          {cat.name}
+                        </span>
+                        <span className="text-gray-400 ml-2 flex-shrink-0">
+                          {pct.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-dark-bg rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${pct}%`,
+                            backgroundColor: cat.color,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-white flex-shrink-0 w-20 text-right">
+                      {formatCurrency(cat.value)}
+                    </span>
+                  </div>
+                );
+              })}
+              {categoryPie.length > 5 && (
+                <p className="text-xs text-gray-500 text-center pt-1">
+                  +{categoryPie.length - 5} more categories
+                </p>
+              )}
+            </div>
+          </>
         )}
       </Card>
     </div>
@@ -305,7 +415,6 @@ const Insights = () => {
 
   const renderDayTime = () => (
     <div className="space-y-5">
-      {/* Day-of-week bar */}
       <Card>
         <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
           <Calendar size={18} className="text-blue-400" /> Spending by Day of
@@ -329,7 +438,6 @@ const Insights = () => {
         </ResponsiveContainer>
       </Card>
 
-      {/* Day-of-week summary cards */}
       <div className="grid grid-cols-4 gap-2">
         {dayOfWeek.map((d) => (
           <Card key={d.day} className="p-3 text-center">
@@ -340,7 +448,6 @@ const Insights = () => {
         ))}
       </div>
 
-      {/* Hourly */}
       <Card>
         <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
           <Clock size={18} className="text-cyan-400" /> Spending by Time of Day
@@ -372,7 +479,6 @@ const Insights = () => {
 
   const renderMerchants = () => (
     <div className="space-y-5">
-      {/* Top merchants bar */}
       <Card>
         <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
           <ShoppingBag size={18} className="text-orange-400" /> Top Merchants /
@@ -411,7 +517,6 @@ const Insights = () => {
         )}
       </Card>
 
-      {/* Merchant list with count */}
       <Card>
         <h3 className="text-base font-semibold mb-3">Merchant Details</h3>
         <div className="space-y-2">
@@ -452,7 +557,6 @@ const Insights = () => {
 
   const renderPredictions = () => (
     <div className="space-y-5">
-      {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3">
         <Card className="p-4">
           <p className="text-xs text-gray-400 mb-1">This Month So Far</p>
@@ -487,7 +591,6 @@ const Insights = () => {
         </Card>
       </div>
 
-      {/* Prediction per category */}
       <Card>
         <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
           <Sparkles size={18} className="text-purple-400" /> Category
@@ -515,7 +618,6 @@ const Insights = () => {
                       </span>
                     </div>
                   </div>
-                  {/* bar: actual vs projected */}
                   <div className="h-3 bg-dark-bg rounded-full overflow-hidden flex">
                     <div
                       className="h-full"
@@ -536,7 +638,6 @@ const Insights = () => {
         </div>
       </Card>
 
-      {/* AI insight text cards */}
       <Card>
         <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
           <Sparkles size={18} className="text-green-400" /> Smart Insights
@@ -595,7 +696,6 @@ const Insights = () => {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Sparkles className="text-purple-400" /> Insights
@@ -603,7 +703,6 @@ const Insights = () => {
         <p className="text-gray-400">Understand your money better</p>
       </div>
 
-      {/* Tab Bar */}
       <div
         className="flex gap-2 overflow-x-auto pb-1"
         style={{ scrollbarWidth: "none" }}
@@ -624,7 +723,6 @@ const Insights = () => {
         ))}
       </div>
 
-      {/* Content */}
       {activeTab === "overview" && renderOverview()}
       {activeTab === "dayTime" && renderDayTime()}
       {activeTab === "merchants" && renderMerchants()}

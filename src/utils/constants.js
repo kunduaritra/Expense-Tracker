@@ -1,3 +1,5 @@
+import { color } from "framer-motion";
+
 export const EXPENSE_CATEGORIES = [
   { id: "food", name: "Food & Dining", emoji: "🍕", color: "#EF4444" },
   { id: "transport", name: "Transportation", emoji: "🚗", color: "#F59E0B" },
@@ -5,6 +7,7 @@ export const EXPENSE_CATEGORIES = [
   { id: "entertainment", name: "Entertainment", emoji: "🎬", color: "#8B5CF6" },
   { id: "bills", name: "Bills & Utilities", emoji: "💡", color: "#3B82F6" },
   { id: "health", name: "Health", emoji: "💊", color: "#10B981" },
+  { id: "groceries", name: "Groceries", emoji: "🛒", color: "#16A34A" },
   { id: "education", name: "Education", emoji: "📚", color: "#6366F1" },
   { id: "travel", name: "Travel", emoji: "✈️", color: "#06B6D4" },
   { id: "investment", name: "Investment", emoji: "📈", color: "#14B8A6" },
